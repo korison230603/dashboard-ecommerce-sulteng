@@ -1,0 +1,3186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Grup Komunitas Facebook Sulawesi Tengah</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #f3f7fb;
+            --bg-accent: #dce8f5;
+            --panel: rgba(255, 255, 255, 0.92);
+            --panel-strong: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: rgba(148, 163, 184, 0.18);
+            --line-strong: rgba(203, 213, 225, 0.92);
+            --line-soft: rgba(255, 255, 255, 0.86);
+            --shadow: 0 22px 54px rgba(15, 23, 42, 0.08);
+            --shadow-soft: 0 14px 30px rgba(15, 23, 42, 0.05);
+            --shadow-hover: 0 26px 54px rgba(15, 23, 42, 0.12);
+            --ring: rgba(37, 99, 235, 0.14);
+            --blue: #2563eb;
+            --blue-soft: rgba(37, 99, 235, 0.14);
+            --teal: #0f766e;
+            --teal-soft: rgba(15, 118, 110, 0.14);
+            --amber: #0284c7;
+            --amber-soft: rgba(2, 132, 199, 0.16);
+            --rose: #475569;
+            --rose-soft: rgba(71, 85, 105, 0.12);
+            --slate-soft: rgba(100, 116, 139, 0.12);
+            --sidebar-width: 96px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 24%),
+                radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.82), transparent 38%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+            z-index: 140;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: rgba(226, 232, 240, 0.78);
+            text-align: center;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            background: rgba(148, 163, 184, 0.12);
+            color: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            color: #ffffff;
+            box-shadow:
+                inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+                0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(148, 163, 184, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-facebook {
+            background: linear-gradient(135deg, rgba(24, 119, 242, 0.32), rgba(37, 99, 235, 0.22));
+        }
+
+        .nav-icon-facebook svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-icon-tokopedia {
+            background: linear-gradient(135deg, rgba(3, 172, 14, 0.28), rgba(15, 118, 110, 0.20));
+        }
+
+        .nav-icon-tokopedia svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-shopee {
+            background: linear-gradient(135deg, rgba(238, 77, 45, 0.32), rgba(249, 115, 22, 0.24));
+        }
+
+        .nav-icon-shopee svg {
+            width: 24px;
+            height: 24px;
+        }
+        .nav-icon-lazada {
+            background: linear-gradient(135deg, rgba(26, 46, 138, 0.32), rgba(245, 114, 36, 0.24));
+        }
+
+        .nav-icon-lazada svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-blibli {
+            background: linear-gradient(135deg, rgba(0, 168, 232, 0.30), rgba(0, 114, 206, 0.22));
+        }
+
+        .nav-icon-blibli svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-facebook,
+        .nav-icon-tokopedia,
+        .nav-icon-shopee,
+        .nav-icon-lazada,
+        .nav-icon-blibli {
+            background-color: transparent;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 72%;
+            box-shadow: none;
+            overflow: hidden;
+        }
+
+
+        .nav-icon-facebook {
+            background-image: url('/static/dashboard/images/facebook.png');
+            background-size: 76%;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .nav-icon-tokopedia {
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-shopee {
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 78%;
+        }
+
+        .nav-icon-lazada {
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 82%;
+        }
+
+        .nav-icon-blibli {
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-facebook svg,
+        .nav-icon-tokopedia svg,
+        .nav-icon-shopee svg,
+        .nav-icon-lazada svg,
+        .nav-icon-blibli svg {
+            display: none;
+        }
+        .main-stage {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .reveal-item {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease,
+                background 0.28s ease;
+            transition-delay: var(--reveal-delay, 0ms);
+            will-change: opacity, transform;
+        }
+
+        body:not(.komunitas-ready) .reveal-item {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        body.komunitas-ready .reveal-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            z-index: 120;
+            background: rgba(248, 251, 255, 0.84);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+            transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .site-header.is-compact {
+            background: rgba(248, 251, 255, 0.72);
+            border-color: rgba(203, 213, 225, 0.78);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .site-header-inner {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 16px 0 14px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: start;
+            transition: padding 0.28s ease;
+        }
+
+        .site-header.is-compact .site-header-inner {
+            padding: 10px 0;
+        }
+
+        .page-shell {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto 40px;
+            padding-top: 152px;
+        }
+
+        .page-heading {
+            display: grid;
+            gap: 4px;
+            max-height: 120px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow: hidden;
+            transition: opacity 0.24s ease, transform 0.24s ease, max-height 0.24s ease;
+        }
+
+        .site-header.is-compact .page-heading {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            line-height: 1.05;
+        }
+
+        .page-subtitle {
+            margin: 0;
+            font-size: clamp(1rem, 1.4vw, 1.18rem);
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--muted);
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-card {
+            padding: 12px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+            transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .site-header.is-compact .nav-card,
+        .site-header.is-compact .nav-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .nav-card.active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: #eff6ff;
+            box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
+        }
+
+        .site-header.is-compact .nav-card.active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: #eff6ff;
+            border-color: transparent;
+            box-shadow: 0 16px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(241, 245, 249, 0.76);
+            z-index: 999;
+            transition: opacity 0.34s ease, visibility 0.34s ease;
+        }
+
+        body.komunitas-ready #loading {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-card {
+            min-width: min(360px, calc(100vw - 40px));
+            padding: 28px 30px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 28px 64px rgba(15, 23, 42, 0.12);
+            display: grid;
+            justify-items: center;
+            gap: 14px;
+            text-align: center;
+            backdrop-filter: blur(14px);
+        }
+
+        .loading-spinner {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 4px solid rgba(203, 213, 225, 0.72);
+            border-top-color: var(--blue);
+            border-right-color: var(--teal);
+            animation: loadingSpin 0.95s linear infinite;
+        }
+
+        .loading-title {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        .loading-subtitle {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+
+        @keyframes loadingSpin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .filter-toolbar {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 60;
+            overflow: visible;
+            isolation: isolate;
+        }
+
+        .filter-menu {
+            position: relative;
+            display: flex;
+            z-index: 1;
+        }
+
+        .filter-menu[open] {
+            z-index: 80;
+        }
+
+        .filter-trigger {
+            width: 240px;
+            min-height: 50px;
+            padding: 0 16px;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .filter-trigger-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .filter-icon {
+            width: 15px;
+            height: 15px;
+            flex: 0 0 15px;
+            color: var(--muted);
+        }
+
+        .filter-trigger::marker,
+        .filter-trigger::-webkit-details-marker {
+            display: none;
+        }
+
+        .filter-count {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 240px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 10px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(203, 213, 225, 0.9);
+            box-shadow: 0 20px 34px rgba(15, 23, 42, 0.1);
+            backdrop-filter: blur(14px);
+            z-index: 81;
+        }
+
+        .filter-option-list {
+            display: grid;
+            gap: 4px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease;
+        }
+
+        .filter-option:hover {
+            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(241, 245, 249, 0.94));
+            transform: translateX(2px);
+        }
+
+        .filter-option input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--blue);
+        }
+
+        .button {
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+            backdrop-filter: blur(12px);
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: linear-gradient(180deg, #ffffff 0%, rgba(241, 245, 249, 0.96) 100%);
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            border-color: transparent;
+            color: #eff6ff;
+            box-shadow: 0 16px 28px rgba(37, 99, 235, 0.18);
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+            color: #eff6ff;
+        }
+
+        .filter-reset {
+            min-width: 188px;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            position: relative;
+            z-index: 1;
+            isolation: isolate;
+            overflow: visible;
+            min-height: 154px;
+            padding: 20px 22px 18px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+        }
+
+        .stat-card:hover,
+        .stat-card:focus-within {
+            z-index: 6;
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -26px -42px auto;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            opacity: 0.95;
+            z-index: 0;
+        }
+
+        .stat-card-blue::after {
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.14), transparent 68%);
+        }
+
+        .stat-card-teal::after {
+            background: radial-gradient(circle, rgba(15, 118, 110, 0.14), transparent 68%);
+        }
+
+        .stat-card-amber::after {
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.15), transparent 68%);
+        }
+
+        .stat-card-slate::after {
+            background: radial-gradient(circle, rgba(71, 85, 105, 0.14), transparent 68%);
+        }
+
+        .stat-label {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-right: 32px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .info-chip {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 20;
+        }
+
+        .info-chip:hover,
+        .info-chip:focus-within {
+            z-index: 120;
+        }
+
+        .info-button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--muted);
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .info-tooltip {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: min(280px, calc(100vw - 48px));
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+            z-index: 121;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .info-chip:hover .info-tooltip,
+        .info-chip:focus-within .info-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+        }
+
+        .stat-dot-blue {
+            background: var(--blue);
+        }
+
+        .stat-dot-teal {
+            background: var(--teal);
+        }
+
+        .stat-dot-amber {
+            background: var(--amber);
+        }
+
+        .stat-dot-slate {
+            background: var(--rose);
+        }
+
+        .stat-footer {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .stat-value {
+            margin: 0;
+            font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .stat-caption {
+            margin: 0;
+            max-width: 110px;
+            text-align: right;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .panel {
+            position: relative;
+            z-index: 1;
+            isolation: isolate;
+            overflow: visible;
+            padding: 22px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            backdrop-filter: blur(12px);
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+        }
+
+        .panel:hover,
+        .panel:focus-within {
+            z-index: 6;
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.12);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 14px;
+            padding-right: 38px;
+        }
+
+        .panel-title-group {
+            min-width: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .panel-title-group h2,
+        .panel-title-group h3 {
+            margin: 0;
+            font-size: 1.14rem;
+            line-height: 1.35;
+        }
+
+        .panel-kicker {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.94));
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+        }
+
+        .panel-description {
+            max-width: 440px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.94rem;
+        }
+
+        .chart-box {
+            position: relative;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(241, 245, 249, 0.94));
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            overflow-anchor: none;
+            box-shadow: inset 0 1px 0 var(--line-soft), 0 12px 24px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.24s ease, box-shadow 0.24s ease, background 0.24s ease;
+        }
+
+        .panel:hover .chart-box {
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: inset 0 1px 0 var(--line-soft), 0 16px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        .chart-box-donut {
+            height: 320px;
+            padding: 12px;
+        }
+
+        .chart-box-bar {
+            height: 320px;
+            padding: 12px 10px 10px;
+        }
+
+        .chart-box-top {
+            height: 270px;
+            padding: 12px 10px 10px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .table-panel {
+            margin-bottom: 28px;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .table-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .table-actions .button {
+            min-height: 38px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            letter-spacing: 0.01em;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.045);
+        }
+
+        .pager-button {
+            min-width: 46px;
+            padding-inline: 12px;
+        }
+
+        .table-meta {
+            margin-bottom: 14px;
+            color: var(--muted);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+            box-shadow: inset 0 1px 0 var(--line-soft), 0 14px 26px rgba(15, 23, 42, 0.045);
+            transition: border-color 0.24s ease, box-shadow 0.24s ease;
+        }
+
+        .table-panel:hover .table-wrapper {
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: inset 0 1px 0 var(--line-soft), 0 18px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: rgba(248, 251, 255, 0.95);
+            backdrop-filter: blur(8px);
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 8px 11px;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.82);
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 9px 11px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            vertical-align: top;
+            color: var(--text);
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.4;
+            background: rgba(255, 255, 255, 0.98);
+            transition: background 0.16s ease;
+        }
+
+        tbody tr:hover td {
+            background: rgba(248, 250, 252, 0.92);
+        }
+
+        tbody tr.fake-row td {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.04), rgba(255, 255, 255, 0.98) 14%);
+        }
+
+        .row-number {
+            width: 50px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 500;
+        }
+
+        .id-cell {
+            min-width: 120px;
+            font-family: "Consolas", "Courier New", monospace;
+            color: var(--text);
+            font-size: 0.76rem;
+        }
+
+        .account-cell {
+            min-width: 180px;
+        }
+
+        .account-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-weight: 400;
+        }
+
+        .fake-marker {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--rose);
+            background: var(--rose-soft);
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .group-cell {
+            min-width: 220px;
+        }
+
+        .content-cell,
+        .comment-cell {
+            min-width: 280px;
+            max-width: 360px;
+            color: var(--muted);
+        }
+
+        .date-cell {
+            min-width: 150px;
+            white-space: nowrap;
+            color: var(--muted);
+        }
+
+        .description-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            line-height: 1.2;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+
+        .badge-pedagang {
+            color: var(--blue);
+            background: rgba(37, 99, 235, 0.1);
+            border-color: rgba(37, 99, 235, 0.16);
+        }
+
+        .badge-non {
+            color: var(--rose);
+            background: rgba(71, 85, 105, 0.1);
+            border-color: rgba(71, 85, 105, 0.16);
+        }
+
+        .empty-state {
+            padding: 22px 16px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .table-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(241, 245, 249, 0.94));
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            box-shadow: inset 0 1px 0 var(--line-soft), 0 10px 22px rgba(15, 23, 42, 0.04);
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .table-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--blue);
+        }
+
+        .table-footer {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px solid rgba(203, 213, 225, 0.86);
+        }
+
+        .pager {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pager-info {
+            min-width: 136px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .table-note,
+        .hint {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .button:focus-visible,
+        .nav-card:focus-visible,
+        .filter-option input:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px var(--ring), 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal-item,
+            .nav-card,
+            .button,
+            .panel,
+            .stat-card,
+            .filter-option,
+            .chart-box,
+            .table-wrapper,
+            tbody td {
+                transition: none !important;
+            }
+
+            .nav-card:hover,
+            .button:hover:not(:disabled),
+            .panel:hover,
+            .stat-card:hover,
+            .filter-option:hover {
+                transform: none;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 980px) {
+            :root {
+                --sidebar-width: 100%;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                width: 100%;
+                bottom: auto;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: column;
+                gap: 10px;
+            }
+
+            .nav-item {
+                min-width: 84px;
+                min-height: auto;
+                padding: 10px 8px;
+            }
+
+            .nav-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
+            }
+
+            .site-header {
+                top: 88px;
+                left: 0;
+            }
+
+            .main-stage {
+                margin-left: 0;
+            }
+
+            .site-header-inner,
+            .stats-grid,
+            .section-grid,
+            .table-header,
+            .table-footer {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+
+            .page-shell {
+                padding-top: 282px;
+            }
+
+            .nav-container {
+                justify-content: flex-start;
+            }
+
+            .table-actions,
+            .pager {
+                width: 100%;
+            }
+
+            .table-actions {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                align-items: stretch;
+            }
+
+            .table-actions .button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-menu {
+                width: 100%;
+            }
+
+            .filter-dropdown {
+                position: static;
+                min-width: 100%;
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: row;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .site-header {
+                top: 152px;
+            }
+
+            .page-shell {
+                width: min(100% - 20px, 1160px);
+                margin: 0 auto 28px;
+                padding-top: 352px;
+            }
+
+            .panel,
+            .stat-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .filter-toolbar {
+                display: grid;
+                gap: 10px;
+            }
+
+            .button,
+            .nav-card,
+            .filter-trigger,
+            .filter-reset {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-actions {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .table-actions .button {
+                min-height: 42px;
+                font-size: 0.8rem;
+            }
+
+            .table-panel {
+                padding: 16px;
+            }
+
+            .table-wrapper {
+                border-radius: 16px;
+                margin-inline: -2px;
+            }
+
+            table {
+                min-width: 780px;
+            }
+
+            .pager-info,
+            .table-note,
+            .stat-caption {
+                text-align: left;
+            }
+
+            .info-tooltip {
+                right: -6px;
+            }
+        }
+    
+        /* Sidebar safety: keep the final GrabFood item visible on short screens. */
+        .sidebar {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .sidebar-nav {
+            padding-bottom: 14px;
+        }
+
+        .nav-item {
+            min-height: 68px; /* keep 7 sidebar items visible */
+        }
+
+        .nav-icon-grabfood {
+            background: rgba(0, 177, 79, 0.16);
+        }
+    
+        .nav-item {
+            min-height: 64px;
+            padding: 7px 5px;
+            gap: 5px;
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+        }
+    
+
+        /* Professional sidebar logo treatment shared across dashboard pages. */
+        .sidebar .nav-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.94);
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.30);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.90),
+                0 10px 20px rgba(2, 6, 23, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover .nav-icon,
+        .sidebar .nav-item.active .nav-icon {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 14px 24px rgba(2, 6, 23, 0.28),
+                0 0 0 4px rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .nav-icon-menu {
+            color: #f8fafc;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(15, 118, 110, 0.26)),
+                rgba(15, 23, 42, 0.56);
+        }
+
+        .sidebar .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.22));
+        }
+
+        .sidebar .nav-icon-facebook {
+            background-color: #ffffff;
+            background-image: none;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .nav-icon-facebook .sidebar-logo {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sidebar .nav-icon-tokopedia {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-shopee {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 76%;
+        }
+
+        .sidebar .nav-icon-lazada {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 78%;
+        }
+
+        .sidebar .nav-icon-blibli {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-grabfood {
+            background: #ffffff;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .sidebar-logo {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .sidebar .nav-icon-grabfood .sidebar-logo {
+            width: 31px;
+            height: 31px;
+        }
+
+        .sidebar .nav-label {
+            letter-spacing: 0.02em;
+        }
+
+
+        /* Keep page titles restrained and subtitles light across dashboards. */
+        .page-title,
+        .hero h1,
+        h1 {
+            font-size: clamp(1.55rem, 2vw, 2.05rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle,
+        .hero p,
+        .subtitle {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: 0;
+        }
+
+
+        /* Tighten the spacing between page subtitles and filter controls. */
+        .site-header-inner {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        .page-heading {
+            gap: 2px;
+        }
+
+        .page-shell {
+            gap: 16px;
+        }
+
+        .filter-toolbar,
+        .filter-panel {
+            margin-top: 0;
+        }
+
+        .hero {
+            gap: 6px;
+        }
+
+        @media (min-width: 981px) {
+            .page-shell {
+                padding-top: 112px;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .page-shell {
+                padding-top: 232px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding-top: 202px;
+            }
+        }
+
+
+        /* BPS copyright footer shared across dashboard pages. */
+        .copyright-footer {
+            width: min(100% - 48px, 1320px);
+            margin: 24px auto 0;
+            padding: 14px 0 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.24);
+            color: var(--muted, #64748b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .copyright-footer {
+                width: min(100% - 28px, 100%);
+                margin-top: 18px;
+                padding-top: 12px;
+            }
+        }
+</style>
+</head>
+<body>
+<header id="siteHeader" class="site-header">
+    <div class="site-header-inner">
+        <div class="page-heading">
+            <h1 class="page-title">Dashboard Grup Komunitas Facebook Sulawesi Tengah</h1>
+            <p class="page-subtitle">Analisis sebaran akun dan grup komunitas Facebook berdasarkan status pedagang, kategori, dan kabupaten/kota.</p>
+        </div>
+
+        <nav class="nav-container">
+            <a href="/facebook/" class="nav-card">Overview</a>
+            <a href="/ecommerce/" class="nav-card">Marketplace</a>
+            <a href="/komunitas/" class="nav-card active">Komunitas</a>
+        </nav>
+    </div>
+</header>
+
+<div id="loading" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loadingTitle" class="loading-title">Sedang memuat data</p>
+        <p id="loadingSubtitle" class="loading-subtitle">Menyiapkan ringkasan dashboard, mohon tunggu sebentar.</p>
+    </div>
+</div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi dashboard">
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item" aria-label="Dashboard utama">
+                <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Ringkasan</span>
+            </a>
+
+            <a href="/facebook/" class="nav-item active" aria-label="Overview Facebook">
+                <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+                <span class="nav-label">Facebook</span>
+            </a>
+
+            <a href="/tokopedia/" class="nav-item" aria-label="Dashboard Tokopedia">
+                <span class="nav-icon nav-icon-tokopedia" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.1 6.9L9.3 8H14.7L16.9 6.9L19 8.8L18.4 14.3C18.1 17.4 15.5 19.8 12.4 19.8H11.6C8.5 19.8 5.9 17.4 5.6 14.3L5 8.8L7.1 6.9Z" fill="#ffffff"/>
+                        <circle cx="9.6" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="14.4" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="9.6" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <circle cx="14.4" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <path d="M10.8 15.8H13.2L12 17.2L10.8 15.8Z" fill="#F59E0B"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Tokopedia</span>
+            </a>
+
+            <a href="/shopee/" class="nav-item" aria-label="Dashboard Shopee">
+                <span class="nav-icon nav-icon-shopee" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 8.3V7.8C8 5.7 9.7 4 11.8 4H12.2C14.3 4 16 5.7 16 7.8V8.3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M6.2 8.6H17.8L16.9 17.9C16.8 18.9 16 19.7 15 19.7H9C8 19.7 7.2 18.9 7.1 17.9L6.2 8.6Z" fill="#ffffff"/>
+                        <path d="M14.4 10.3C13.9 10.1 13.4 10 12.8 10C11.4 10 10.4 10.7 10.4 11.9C10.4 12.8 11 13.4 12.1 14L12.8 14.4C13.3 14.7 13.5 15 13.5 15.4C13.5 15.9 13.1 16.3 12.2 16.3C11.4 16.3 10.6 16 9.8 15.4V17.2C10.5 17.6 11.3 17.8 12.1 17.8C13.4 17.8 14.4 17 14.4 15.8C14.4 14.9 13.8 14.2 12.7 13.6L12.1 13.3C11.5 12.9 11.3 12.7 11.3 12.2C11.3 11.7 11.7 11.4 12.4 11.4C13.1 11.4 13.7 11.6 14.4 12.1V10.3Z" fill="#EE4D2D"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Shopee</span>
+            </a>
+            <a href="/lazada/" class="nav-item" aria-label="Dashboard Lazada">
+                <span class="nav-icon nav-icon-lazada" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4.2L19 8.1V15.9L12 19.8L5 15.9V8.1L12 4.2Z" fill="#ffffff"/>
+                        <path d="M8.3 9.4L12 7.3L15.7 9.4V14.6L12 16.7L8.3 14.6V9.4Z" fill="#1A2E8A"/>
+                        <path d="M9.6 9.7L12 11.1L14.4 9.7L15.5 11.5L12 14.6L8.5 11.5L9.6 9.7Z" fill="#F57224"/>
+                        <path d="M8.5 11.5L12 14.6L15.5 11.5V14.4L12 16.4L8.5 14.4V11.5Z" fill="#E0006D" fill-opacity="0.88"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Lazada</span>
+            </a>
+
+            <a href="/blibli/" class="nav-item" aria-label="Dashboard Blibli">
+                <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+                <span class="nav-label">Blibli</span>
+            </a>
+            <a href="/grabfood/" class="nav-item" aria-label="Dashboard GrabFood">
+                <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+                <span class="nav-label">GrabFood</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-stage">
+<div class="page-shell">
+    <section class="filter-toolbar reveal-item" style="--reveal-delay: 40ms;" aria-label="Filter komunitas">
+        <details class="filter-menu">
+            <summary class="button filter-trigger">
+                <span class="filter-trigger-main">
+                    <svg class="filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                        <circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                    </svg>
+                    <span>Grup Komunitas</span>
+                </span>
+                <span id="groupFilterLabel" class="filter-count">Semua</span>
+            </summary>
+            <div id="groupFilterOptions" class="filter-dropdown filter-option-list"></div>
+        </details>
+
+        <details class="filter-menu">
+            <summary class="button filter-trigger">
+                <span class="filter-trigger-main">
+                    <svg class="filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6h16l-6 7v4l-4 2v-6L4 6Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                    </svg>
+                    <span>Status Akun</span>
+                </span>
+                <span id="statusFilterLabel" class="filter-count">Semua</span>
+            </summary>
+            <div id="statusFilterOptions" class="filter-dropdown filter-option-list">
+                <label class="filter-option">
+                    <input type="checkbox" value="pedagang">
+                    <span>Pelaku Usaha</span>
+                </label>
+                <label class="filter-option">
+                    <input type="checkbox" value="bukan_pedagang">
+                    <span>Bukan Pelaku Usaha</span>
+                </label>
+            </div>
+        </details>
+
+        <button id="resetFilterButton" class="button filter-reset" type="button">
+            <span class="filter-trigger-main">
+                <svg class="filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                    <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+                </svg>
+                <span>Reset Filter</span>
+            </span>
+        </button>
+    </section>
+
+    <section class="stats-grid">
+        <article class="stat-card stat-card-blue reveal-item" style="--reveal-delay: 90ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan total akun komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Jumlah seluruh akun unik yang teridentifikasi dari 15 grup Facebook aktif di Kota Palu.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-blue"></span>
+                Total Akun
+            </span>
+            <div class="stat-footer">
+                <h2 id="totalAccountCount" class="stat-value">0</h2>
+                <p class="stat-caption">Akun unik</p>
+            </div>
+        </article>
+
+        <article class="stat-card stat-card-teal reveal-item" style="--reveal-delay: 150ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan akun pelaku usaha komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Pelaku usaha merupakan anggota komunitas yang memanfaatkan platform Facebook sebagai media digital untuk memasarkan produk atau jasa. Kategori ini ditetapkan berdasarkan analisis aktivitas di grup, terutama saat terdeteksi melakukan aktivitas perdagangan.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-teal"></span>
+                Akun Pelaku Usaha
+            </span>
+            <div class="stat-footer">
+                <h2 id="totalPedagangCount" class="stat-value">0</h2>
+                <p class="stat-caption">Kategori pelaku usaha</p>
+            </div>
+        </article>
+
+        <article class="stat-card stat-card-amber reveal-item" style="--reveal-delay: 210ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan akun bukan pelaku usaha komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Akun yang tidak terindikasi melakukan aktivitas perdagangan berdasarkan analisis aktivitas dan percakapan di grup komunitas.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-amber"></span>
+                Akun Bukan Pelaku Usaha
+            </span>
+            <div class="stat-footer">
+                <h2 id="totalNonPedagangCount" class="stat-value">0</h2>
+                <p class="stat-caption">Bukan pelaku usaha</p>
+            </div>
+        </article>
+
+        <article class="stat-card stat-card-slate reveal-item" style="--reveal-delay: 270ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan total komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Jumlah 15 grup Facebook aktif di Kota Palu yang dianalisis untuk mengidentifikasi aktivitas pelaku usaha.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-slate"></span>
+                Total Komunitas
+            </span>
+            <div class="stat-footer">
+                <h2 id="totalCommunityCount" class="stat-value">0</h2>
+                <p class="stat-caption">Grup aktif</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="section-grid">
+        <article class="panel reveal-item" style="--reveal-delay: 330ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan komposisi akun komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Diagram ini menyajikan distribusi akun pelaku usaha dan akun bukan pelaku usaha berdasarkan hasil klasifikasi pada data komunitas Facebook.</div>
+            </div>
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3>Perbandingan Pelaku Usaha dan Bukan Pelaku Usaha</h3>
+                    <span class="panel-kicker">Komposisi Akun</span>
+                </div>
+            </div>
+
+            <div class="chart-box chart-box-donut">
+                <canvas id="komunitasPieChart"></canvas>
+            </div>
+        </article>
+
+        <article class="panel reveal-item" style="--reveal-delay: 390ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan distribusi akun per grup">i</button>
+                <div id="groupPanelTooltip" class="info-tooltip" role="tooltip">Grafik ini menyajikan hingga 10 grup komunitas dengan jumlah akun pelaku usaha terbanyak berdasarkan hasil identifikasi aktivitas akun.</div>
+            </div>
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3 id="groupPanelTitle">Top 10 Pelaku Usaha per Grup</h3>
+                    <span id="groupPanelKicker" class="panel-kicker">Distribusi Komunitas</span>
+                </div>
+            </div>
+
+            <div class="chart-box chart-box-bar">
+                <canvas id="groupBarChart"></canvas>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel reveal-item" style="--reveal-delay: 450ms;">
+        <div class="panel-header">
+            <div class="panel-title-group">
+                <h3 id="topAuthorsPanelTitle">Top 5 Akun Pelaku Usaha dengan Postingan Terbanyak</h3>
+                <span id="topAuthorsPanelKicker" class="panel-kicker">Intensitas Akun</span>
+            </div>
+            <p id="topAuthorsPanelDescription" class="panel-description">Menyoroti akun pelaku usaha dengan jumlah posting paling tinggi untuk melihat aktor paling aktif di komunitas.</p>
+        </div>
+
+        <div class="chart-box chart-box-top">
+            <canvas id="topPedagangChart"></canvas>
+        </div>
+    </section>
+
+    <section class="panel table-panel reveal-item" style="--reveal-delay: 510ms;">
+        <div class="table-header">
+            <div class="panel-title-group">
+                <h3>Data Komunitas</h3>
+                <span class="panel-kicker">Tabel Data</span>
+            </div>
+
+            <div class="table-actions">
+                <button id="exportExcelButton" class="button" type="button" disabled>Export Excel</button>
+                <button id="exportCsvButton" class="button" type="button" disabled>Export CSV</button>
+                <button id="exportJsonButton" class="button" type="button" disabled>Export JSON</button>
+            </div>
+        </div>
+
+        <div class="table-meta">
+            <p class="table-note">
+                <span class="fake-marker" aria-hidden="true">*</span>
+                Menandakan akun dengan penanda nama fiktif pada data komunitas.
+            </p>
+        </div>
+
+        <div id="tableStatus" class="table-status">
+            <span class="table-status-dot" aria-hidden="true"></span>
+            <span id="tableStatusText">Sedang memuat data...</span>
+        </div>
+
+        <div class="table-wrapper">
+            <table aria-label="Data komunitas">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Author ID</th>
+                        <th>Nama Akun</th>
+                        <th>Grup</th>
+                        <th>Isi Postingan</th>
+                        <th>Komentar</th>
+                        <th>Tanggal Posting</th>
+                        <th>Status Akun</th>
+                    </tr>
+                </thead>
+                <tbody id="komunitasTableBody">
+                    <tr>
+                        <td colspan="8" class="empty-state">Sedang memuat data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer">
+            <p id="tableSummary" class="hint">Menyiapkan data komunitas.</p>
+
+            <div class="pager">
+                <button id="firstPageButton" class="button pager-button" type="button" aria-label="Ke halaman pertama" disabled>&lt;&lt;</button>
+                <button id="prevPageButton" class="button pager-button" type="button" aria-label="Halaman sebelumnya" disabled>&lt;</button>
+                <span id="pagerInfo" class="pager-info">Halaman 1 dari 1</span>
+                <button id="nextPageButton" class="button pager-button" type="button" aria-label="Halaman berikutnya" disabled>&gt;</button>
+                <button id="lastPageButton" class="button pager-button" type="button" aria-label="Ke halaman terakhir" disabled>&gt;&gt;</button>
+            </div>
+        </div>
+    </section>
+</div>
+        <footer class="copyright-footer" aria-label="Copyright">&copy; BPS SULTENG 2026</footer>
+</main>
+</div>
+<script>
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const siteHeader = document.getElementById('siteHeader')
+const collator = new Intl.Collator('id-ID', { sensitivity: 'base', numeric: true })
+const state = {
+    pageSize: 10,
+    currentPage: 1,
+    allRows: [],
+    intensityRows: [],
+    filteredRows: [],
+    filters: {
+        groups: new Set(),
+        statuses: new Set(),
+    },
+    hasAnimatedStats: false,
+    charts: {
+        pie: null,
+        groups: null,
+        topAuthors: null,
+    },
+}
+
+function updateHeaderOnScroll() {
+    if (!siteHeader) {
+        return
+    }
+
+    siteHeader.classList.toggle('is-compact', window.scrollY > 72)
+}
+
+function toNumber(value) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+function formatNumber(value) {
+    return toNumber(value).toLocaleString('id-ID')
+}
+
+function titleCase(value) {
+    return String(value || '')
+        .replace(/_/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, char => char.toUpperCase())
+}
+
+function normalizeStatusKey(value) {
+    const normalized = String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/-/g, '_')
+        .replace(/\s+/g, '_')
+
+    if (normalized.includes('bukan') || normalized.includes('non')) {
+        return 'bukan_pedagang'
+    }
+
+    if (normalized.includes('pedagang')) {
+        return 'pedagang'
+    }
+
+    return normalized || 'tidak_diketahui'
+}
+
+function statusLabel(value) {
+    return normalizeStatusKey(value) === 'pedagang' ? 'Pelaku Usaha' : 'Bukan Pelaku Usaha'
+}
+
+function statusBadgeClass(value) {
+    return normalizeStatusKey(value) === 'pedagang' ? 'badge-pedagang' : 'badge-non'
+}
+
+function isFakeAccount(flag, author = '') {
+    const normalized = String(flag || '')
+        .trim()
+        .toLowerCase()
+        .replace(/-/g, '_')
+        .replace(/\s+/g, '_')
+
+    if (String(author || '').trim().toLowerCase() === 'peserta anonim') {
+        return false
+    }
+
+    return normalized === 'nama_fiktif'
+}
+
+function displayGroupName(value) {
+    return titleCase(value || 'Tanpa Grup') || 'Tanpa Grup'
+}
+
+function displayAuthorName(value) {
+    const text = String(value || '').trim()
+    return text || 'Akun tidak diketahui'
+}
+
+function getAuthorKey(row) {
+    const authorId = String(row?.author_id ?? '').trim()
+    if (authorId) {
+        return authorId
+    }
+
+    return displayAuthorName(row?.Author)
+}
+
+function displayText(value) {
+    const text = String(value ?? '').trim()
+    return text || '-'
+}
+
+function truncateText(value, maxLength = 34) {
+    const text = String(value || '').trim()
+    if (text.length <= maxLength) {
+        return text
+    }
+    return `${text.slice(0, maxLength - 1)}...`
+}
+
+function formatDateTime(value) {
+    const text = String(value || '').trim()
+    if (!text) {
+        return '-'
+    }
+
+    const normalized = text.includes('T') ? text : text.replace(' ', 'T')
+    const date = new Date(normalized)
+    if (Number.isNaN(date.getTime())) {
+        return text
+    }
+
+    return date.toLocaleString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+function getPostingTimestamp(value) {
+    const text = String(value || '').trim()
+    if (!text) {
+        return 0
+    }
+
+    const normalized = text.includes('T') ? text : text.replace(' ', 'T')
+    const timestamp = new Date(normalized).getTime()
+    return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+function setLoadingMessage(title, subtitle) {
+    const titleElement = document.getElementById('loadingTitle')
+    const subtitleElement = document.getElementById('loadingSubtitle')
+
+    if (titleElement) {
+        titleElement.textContent = title
+    }
+
+    if (subtitleElement) {
+        subtitleElement.textContent = subtitle
+    }
+}
+
+function waitForNextPaint() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+    })
+}
+
+function revealPage() {
+    document.body.classList.add('komunitas-ready')
+}
+
+function updateCounter(elementId, targetValue, shouldAnimate = false) {
+    const element = document.getElementById(elementId)
+    if (!element) {
+        return
+    }
+
+    const finalValue = toNumber(targetValue)
+    if (!shouldAnimate || prefersReducedMotion) {
+        element.textContent = formatNumber(finalValue)
+        return
+    }
+
+    const duration = 900
+    const startTime = performance.now()
+
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        element.textContent = formatNumber(Math.round(finalValue * eased))
+
+        if (progress < 1) {
+            requestAnimationFrame(step)
+        }
+    }
+
+    requestAnimationFrame(step)
+}
+
+function destroyChart(instance) {
+    if (instance) {
+        instance.destroy()
+    }
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max)
+}
+
+function setDynamicChartHeight(canvas, height) {
+    const chartBox = canvas ? canvas.closest('.chart-box') : null
+    if (!chartBox) {
+        return
+    }
+
+    chartBox.style.height = `${Math.round(height)}px`
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + width - radius, y)
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    ctx.lineTo(x + width, y + height - radius)
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    ctx.lineTo(x + radius, y + height)
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+}
+
+function drawCleanBadge(ctx, x, y, width, height) {
+    ctx.save()
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'
+    ctx.strokeStyle = 'rgba(203, 213, 225, 0.9)'
+    ctx.lineWidth = 1
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.08)'
+    ctx.shadowBlur = 10
+    ctx.shadowOffsetY = 3
+    drawRoundedRect(ctx, x, y, width, height, 12)
+    ctx.fill()
+    ctx.shadowColor = 'transparent'
+    ctx.stroke()
+    ctx.restore()
+}
+
+function drawDoughnutCallout(ctx, chart, arc, color, percentageLabel, valueLabel) {
+    const angle = (arc.startAngle + arc.endAngle) / 2
+    const isRight = Math.cos(angle) >= 0
+    const startRadius = arc.outerRadius + 4
+    const elbowRadius = arc.outerRadius + 20
+    const startX = arc.x + (Math.cos(angle) * startRadius)
+    const startY = arc.y + (Math.sin(angle) * startRadius)
+    const elbowX = arc.x + (Math.cos(angle) * elbowRadius)
+    const elbowY = arc.y + (Math.sin(angle) * elbowRadius)
+    const lineEndX = isRight
+        ? Math.min(chart.width - 58, elbowX + 28)
+        : Math.max(58, elbowX - 28)
+    const textX = isRight ? lineEndX + 8 : lineEndX - 8
+
+    ctx.save()
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.9)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    ctx.lineTo(elbowX, elbowY)
+    ctx.lineTo(lineEndX, elbowY)
+    ctx.stroke()
+
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.arc(startX, startY, 3.5, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.textAlign = isRight ? 'left' : 'right'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = '#142235'
+    ctx.font = '700 11px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+    ctx.fillText(percentageLabel, textX, elbowY - 6)
+    ctx.fillStyle = '#64748b'
+    ctx.font = '600 9px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+    ctx.fillText(valueLabel, textX, elbowY + 8)
+    ctx.restore()
+}
+
+function formatPercentageLabel(value, total) {
+    const percentage = total ? Math.round((toNumber(value) / total) * 100) : 0
+    return `${percentage}%`
+}
+
+const komunitasBarValueLabelPlugin = {
+    id: 'komunitasBarValueLabelPlugin',
+    afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'bar') {
+            return
+        }
+
+        const { ctx, chartArea } = chart
+        const isHorizontal = chart.options.indexAxis === 'y'
+
+        ctx.save()
+        ctx.textBaseline = 'middle'
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex)
+            if (meta.hidden) {
+                return
+            }
+
+            meta.data.forEach((bar, index) => {
+                const value = toNumber(dataset.data[index])
+                if (value <= 0) {
+                    return
+                }
+
+                const label = formatNumber(value)
+                const start = isHorizontal ? Math.min(bar.base, bar.x) : Math.min(bar.base, bar.y)
+                const end = isHorizontal ? Math.max(bar.base, bar.x) : Math.max(bar.base, bar.y)
+                const size = Math.abs(end - start)
+
+                ctx.font = '600 11px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+                if (size >= 72) {
+                    ctx.textAlign = 'right'
+                    ctx.fillStyle = '#ffffff'
+                    ctx.shadowColor = 'rgba(15, 23, 42, 0.22)'
+                    ctx.shadowBlur = 6
+                    ctx.fillText(label, end - 10, bar.y)
+                    ctx.shadowColor = 'transparent'
+                    return
+                }
+
+                const textWidth = ctx.measureText(label).width
+                const badgeWidth = textWidth + 16
+                const badgeHeight = 22
+                const badgeX = Math.min(end + 8, chartArea.right - badgeWidth)
+                const badgeY = isHorizontal
+                    ? bar.y - (badgeHeight / 2)
+                    : Math.max(chartArea.top + 8, end - badgeHeight - 8)
+
+                drawCleanBadge(ctx, badgeX, badgeY, badgeWidth, badgeHeight)
+                ctx.textAlign = 'center'
+                ctx.fillStyle = '#142235'
+                ctx.fillText(label, badgeX + (badgeWidth / 2), badgeY + (badgeHeight / 2))
+            })
+        })
+
+        ctx.restore()
+    },
+}
+
+const komunitasDoughnutValueLabelPlugin = {
+    id: 'komunitasDoughnutValueLabelPlugin',
+    afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'doughnut') {
+            return
+        }
+
+        const dataset = chart.data.datasets[0]
+        const meta = chart.getDatasetMeta(0)
+        if (!dataset || !meta?.data?.length) {
+            return
+        }
+
+        const total = dataset.data.reduce((sum, item) => sum + toNumber(item), 0)
+        const { ctx } = chart
+        ctx.save()
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        meta.data.forEach((arc, index) => {
+            const value = toNumber(dataset.data[index])
+            if (value <= 0) {
+                return
+            }
+
+            const percentageLabel = formatPercentageLabel(value, total)
+            const valueLabel = formatNumber(value)
+            const color = Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor[index] : '#2563eb'
+            drawDoughnutCallout(ctx, chart, arc, color, percentageLabel, valueLabel)
+        })
+
+        ctx.restore()
+    },
+}
+
+Chart.register(komunitasBarValueLabelPlugin, komunitasDoughnutValueLabelPlugin)
+
+function totalPages() {
+    return Math.max(1, Math.ceil(state.filteredRows.length / state.pageSize))
+}
+
+function getCheckedValues(containerId) {
+    return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)]
+        .map(input => input.value)
+}
+
+function getAvailableFilterValues(containerId) {
+    return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]`)]
+        .map(input => input.value)
+}
+
+function setAllFilterOptions(containerId, checked = true) {
+    document.querySelectorAll(`#${containerId} input[type="checkbox"]`)
+        .forEach(input => {
+            input.checked = checked
+        })
+}
+
+function formatFilterLabel(selectedValues, allValues, formatter = value => value) {
+    if (!allValues.length) {
+        return 'Semua'
+    }
+
+    if (selectedValues.length === allValues.length) {
+        return 'Semua'
+    }
+
+    if (selectedValues.length === 0) {
+        return '0 dipilih'
+    }
+
+    if (selectedValues.length === 1) {
+        return formatter(selectedValues[0])
+    }
+
+    return `${selectedValues.length} dipilih`
+}
+
+function updateFilterLabels() {
+    const groupLabel = document.getElementById('groupFilterLabel')
+    const statusLabelElement = document.getElementById('statusFilterLabel')
+    const selectedGroups = [...state.filters.groups]
+    const selectedStatuses = [...state.filters.statuses]
+    const allGroups = getAvailableFilterValues('groupFilterOptions')
+    const allStatuses = getAvailableFilterValues('statusFilterOptions')
+
+    if (groupLabel) {
+        groupLabel.textContent = formatFilterLabel(
+            selectedGroups,
+            allGroups,
+            value => value
+        )
+    }
+
+    if (statusLabelElement) {
+        statusLabelElement.textContent = formatFilterLabel(
+            selectedStatuses,
+            allStatuses,
+            value => statusLabel(value)
+        )
+    }
+}
+
+function syncFiltersFromUI() {
+    state.filters.groups = new Set(getCheckedValues('groupFilterOptions'))
+    state.filters.statuses = new Set(getCheckedValues('statusFilterOptions'))
+    updateFilterLabels()
+}
+
+function closeFilterMenus(activeMenu = null) {
+    document.querySelectorAll('.filter-menu[open]').forEach(menu => {
+        if (menu !== activeMenu) {
+            menu.removeAttribute('open')
+        }
+    })
+}
+
+function initializeStatusFilterSelections() {
+    const currentSelections = getCheckedValues('statusFilterOptions')
+    if (!currentSelections.length) {
+        setAllFilterOptions('statusFilterOptions', true)
+    }
+    syncFiltersFromUI()
+}
+
+function populateGroupFilter(rows) {
+    const container = document.getElementById('groupFilterOptions')
+    if (!container) {
+        return
+    }
+
+    const currentSelections = new Set(state.filters.groups)
+    const groups = [...new Set(rows.map(row => displayGroupName(row.group_name)))]
+        .sort((a, b) => collator.compare(a, b))
+    const selectionsToApply = currentSelections.size ? currentSelections : new Set(groups)
+
+    container.innerHTML = ''
+
+    groups.forEach(group => {
+        const label = document.createElement('label')
+        label.className = 'filter-option'
+
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.value = group
+        input.checked = selectionsToApply.has(group)
+
+        const text = document.createElement('span')
+        text.textContent = group
+
+        label.appendChild(input)
+        label.appendChild(text)
+        container.appendChild(label)
+    })
+
+    state.filters.groups = new Set(groups.filter(group => selectionsToApply.has(group)))
+    updateFilterLabels()
+}
+
+function buildStatusCounts(rows) {
+    return rows.reduce((result, row) => {
+        const status = normalizeStatusKey(row.kategori_final)
+        if (status === 'pedagang') {
+            result.pedagang += 1
+        } else {
+            result.bukan_pedagang += 1
+        }
+        return result
+    }, { pedagang: 0, bukan_pedagang: 0 })
+}
+
+function getFocusedStatus() {
+    if (state.filters.statuses.size === 1 && state.filters.statuses.has('bukan_pedagang')) {
+        return 'bukan_pedagang'
+    }
+
+    return 'pedagang'
+}
+
+function getFocusedStatusConfig() {
+    if (getFocusedStatus() === 'bukan_pedagang') {
+        return {
+            key: 'bukan_pedagang',
+            titleLabel: 'Bukan Pelaku Usaha',
+            titleShort: 'Bukan Pelaku Usaha',
+            accountPhrase: 'akun bukan pelaku usaha',
+        }
+    }
+
+    return {
+        key: 'pedagang',
+        titleLabel: 'Pelaku Usaha',
+        titleShort: 'Pelaku Usaha',
+        accountPhrase: 'akun pelaku usaha',
+    }
+}
+
+function updateFocusedPanelContent() {
+    const config = getFocusedStatusConfig()
+    const groupTitle = document.getElementById('groupPanelTitle')
+    const groupKicker = document.getElementById('groupPanelKicker')
+    const groupTooltip = document.getElementById('groupPanelTooltip')
+    const topTitle = document.getElementById('topAuthorsPanelTitle')
+    const topKicker = document.getElementById('topAuthorsPanelKicker')
+    const topDescription = document.getElementById('topAuthorsPanelDescription')
+
+    if (groupTitle) {
+        groupTitle.textContent = `Top 10 ${config.titleLabel} per Grup`
+    }
+
+    if (groupKicker) {
+        groupKicker.textContent = `Distribusi ${config.titleShort}`
+    }
+
+    if (groupTooltip) {
+        groupTooltip.textContent = `Grafik ini menyajikan hingga 10 grup komunitas dengan jumlah ${config.accountPhrase} terbanyak berdasarkan hasil identifikasi aktivitas akun.`
+    }
+
+    if (topTitle) {
+        topTitle.textContent = `Top 5 Akun ${config.titleLabel} dengan Postingan Terbanyak`
+    }
+
+    if (topKicker) {
+        topKicker.textContent = `Intensitas ${config.titleShort}`
+    }
+
+    if (topDescription) {
+        topDescription.textContent = `Menyoroti ${config.accountPhrase} dengan jumlah posting paling tinggi untuk melihat aktor paling aktif di komunitas.`
+    }
+}
+
+function buildGroupRows(rows) {
+    const focusedStatus = getFocusedStatus()
+    const groupMap = new Map()
+
+    rows.forEach(row => {
+        if (normalizeStatusKey(row.kategori_final) !== focusedStatus) {
+            return
+        }
+
+        const group = displayGroupName(row.group_name)
+        groupMap.set(group, (groupMap.get(group) || 0) + 1)
+    })
+
+    return [...groupMap.entries()]
+        .map(([group_name, jumlah_akun]) => ({ group_name, jumlah_akun }))
+        .sort((a, b) => (b.jumlah_akun - a.jumlah_akun) || collator.compare(a.group_name, b.group_name))
+        .slice(0, 10)
+}
+
+function buildTopAuthors() {
+    const focusedStatus = getFocusedStatus()
+    const filteredAuthorKeys = new Set(
+        state.filteredRows
+            .filter(row => normalizeStatusKey(row.kategori_final) === focusedStatus)
+            .map(row => getAuthorKey(row))
+    )
+
+    const authorMap = new Map()
+
+    state.intensityRows.forEach(row => {
+        if (normalizeStatusKey(row.kategori_final) !== focusedStatus) {
+            return
+        }
+
+        const authorKey = getAuthorKey(row)
+        if (!filteredAuthorKeys.has(authorKey)) {
+            return
+        }
+
+        const current = authorMap.get(authorKey)
+        const jumlahPost = toNumber(row.jumlah_post)
+
+        if (!current) {
+            authorMap.set(authorKey, {
+                Author: displayAuthorName(row.Author),
+                jumlah_post: jumlahPost,
+            })
+            return
+        }
+
+        current.jumlah_post = Math.max(current.jumlah_post, jumlahPost)
+    })
+
+    if (!authorMap.size) {
+        state.filteredRows.forEach(row => {
+            if (normalizeStatusKey(row.kategori_final) !== focusedStatus) {
+                return
+            }
+
+            const authorKey = getAuthorKey(row)
+            if (!authorMap.has(authorKey)) {
+                authorMap.set(authorKey, {
+                    Author: displayAuthorName(row.Author),
+                    jumlah_post: 0,
+                })
+            }
+
+            authorMap.get(authorKey).jumlah_post += 1
+        })
+    }
+
+    return [...authorMap.values()]
+        .sort((a, b) => {
+            const countDelta = toNumber(b.jumlah_post) - toNumber(a.jumlah_post)
+            if (countDelta !== 0) {
+                return countDelta
+            }
+            return collator.compare(displayAuthorName(a.Author), displayAuthorName(b.Author))
+        })
+        .slice(0, 5)
+}
+
+function getUniqueCommunityCount(rows) {
+    return new Set(rows.map(row => displayGroupName(row.group_name))).size
+}
+
+function renderStats(rows, shouldAnimate = false) {
+    const statusCounts = buildStatusCounts(rows)
+    updateCounter('totalAccountCount', rows.length, shouldAnimate)
+    updateCounter('totalPedagangCount', statusCounts.pedagang, shouldAnimate)
+    updateCounter('totalNonPedagangCount', statusCounts.bukan_pedagang, shouldAnimate)
+    updateCounter('totalCommunityCount', getUniqueCommunityCount(rows), shouldAnimate)
+}
+
+function getCommunityPairChartHeight(itemCount) {
+    return clamp((Math.max(itemCount, 1) * 24) + 88, 220, 460)
+}
+
+function pieChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: prefersReducedMotion ? 0 : 540,
+            easing: 'easeOutCubic',
+        },
+        cutout: '68%',
+        layout: {
+            padding: {
+                top: 16,
+                right: 56,
+                bottom: 12,
+                left: 56,
+            },
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    padding: 16,
+                    color: '#334155',
+                    font: {
+                        size: 12,
+                        weight: '600',
+                    },
+                },
+            },
+            tooltip: {
+                callbacks: {
+                    label(context) {
+                        const value = toNumber(context.raw)
+                        const total = context.dataset.data.reduce((sum, item) => sum + toNumber(item), 0)
+                        const percentage = formatPercentageLabel(value, total)
+                        return `${context.label}: ${percentage} (${formatNumber(value)})`
+                    },
+                },
+            },
+        },
+    }
+}
+
+function renderPieChart(rows) {
+    const counts = buildStatusCounts(rows)
+    const canvas = document.getElementById('komunitasPieChart')
+    const chartHeight = getCommunityPairChartHeight(buildGroupRows(rows).length)
+
+    setDynamicChartHeight(canvas, chartHeight)
+    destroyChart(state.charts.pie)
+
+    state.charts.pie = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pelaku Usaha', 'Bukan Pelaku Usaha'],
+            datasets: [
+                {
+                    data: [counts.pedagang, counts.bukan_pedagang],
+                    radius: '90%',
+                    backgroundColor: ['#2563eb', '#cbd5e1'],
+                    hoverBackgroundColor: ['#1d4ed8', '#94a3b8'],
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    hoverOffset: 6,
+                },
+            ],
+        },
+        options: pieChartOptions(),
+    })
+}
+
+function renderGroupChart(rows) {
+    const statusConfig = getFocusedStatusConfig()
+    const groupRows = buildGroupRows(rows)
+    const safeRows = groupRows.length ? groupRows : [{ group_name: 'Tidak ada data', jumlah_akun: 0 }]
+    const labels = safeRows.map(item => truncateText(item.group_name, 42))
+    const values = safeRows.map(item => toNumber(item.jumlah_akun))
+    const canvas = document.getElementById('groupBarChart')
+    const chartHeight = getCommunityPairChartHeight(labels.length)
+
+    setDynamicChartHeight(canvas, chartHeight)
+    destroyChart(state.charts.groups)
+
+    state.charts.groups = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: `Jumlah ${statusConfig.titleLabel}`,
+                    data: values,
+                    backgroundColor: '#2563eb',
+                    borderRadius: 10,
+                    borderSkipped: false,
+                    barThickness: 14,
+                    maxBarThickness: 16,
+                    categoryPercentage: 0.76,
+                    barPercentage: 0.92,
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: prefersReducedMotion ? 0 : 560,
+                easing: 'easeOutCubic',
+            },
+            layout: {
+                padding: {
+                    top: 6,
+                    right: 10,
+                    bottom: 6,
+                    left: 6,
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        title(context) {
+                            const row = safeRows[context[0].dataIndex]
+                            return row ? row.group_name : context[0].label
+                        },
+                        label(context) {
+                            return `Jumlah ${statusConfig.accountPhrase}: ${formatNumber(context.raw)}`
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(203, 213, 225, 0.72)',
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        callback(value) {
+                            return formatNumber(value)
+                        },
+                    },
+                },
+                y: {
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: '#334155',
+                        font: {
+                            size: 12,
+                            weight: '600',
+                        },
+                    },
+                },
+            },
+        },
+    })
+}
+
+function renderTopAuthorsChart() {
+    const statusConfig = getFocusedStatusConfig()
+    const authorRows = buildTopAuthors()
+    const safeRows = authorRows.length ? authorRows : [{ Author: 'Tidak ada data', jumlah_post: 0 }]
+    const labels = safeRows.map(item => truncateText(displayAuthorName(item.Author), 34))
+    const values = safeRows.map(item => toNumber(item.jumlah_post))
+    const canvas = document.getElementById('topPedagangChart')
+    const chartHeight = clamp((labels.length * 30) + 90, 220, 320)
+
+    setDynamicChartHeight(canvas, chartHeight)
+    destroyChart(state.charts.topAuthors)
+
+    state.charts.topAuthors = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: `Jumlah Postingan ${statusConfig.titleLabel}`,
+                    data: values,
+                    backgroundColor: ['#0f766e', '#0f766e', '#0f766e', '#0f766e', '#0f766e'],
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    barThickness: 18,
+                    maxBarThickness: 20,
+                    categoryPercentage: 0.72,
+                    barPercentage: 0.9,
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: prefersReducedMotion ? 0 : 600,
+                easing: 'easeOutCubic',
+            },
+            layout: {
+                padding: {
+                    top: 6,
+                    right: 10,
+                    bottom: 6,
+                    left: 6,
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        title(context) {
+                            const row = safeRows[context[0].dataIndex]
+                            return row ? displayAuthorName(row.Author) : context[0].label
+                        },
+                        label(context) {
+                            return `Jumlah postingan ${statusConfig.accountPhrase}: ${formatNumber(context.raw)}`
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(203, 213, 225, 0.72)',
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        callback(value) {
+                            return formatNumber(value)
+                        },
+                    },
+                },
+                y: {
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: '#334155',
+                        font: {
+                            size: 12,
+                            weight: '600',
+                        },
+                    },
+                },
+            },
+        },
+    })
+}
+
+function updateTableSummary() {
+    const totalRows = state.filteredRows.length
+    const start = totalRows === 0 ? 0 : ((state.currentPage - 1) * state.pageSize) + 1
+    const end = Math.min(state.currentPage * state.pageSize, totalRows)
+    const summary = document.getElementById('tableSummary')
+
+    if (!summary) {
+        return
+    }
+
+    summary.innerHTML = `Menampilkan <strong>${formatNumber(start)}-${formatNumber(end)}</strong> dari <strong>${formatNumber(totalRows)}</strong> data`
+}
+
+function updatePager() {
+    const pagerInfo = document.getElementById('pagerInfo')
+    const firstButton = document.getElementById('firstPageButton')
+    const prevButton = document.getElementById('prevPageButton')
+    const nextButton = document.getElementById('nextPageButton')
+    const lastButton = document.getElementById('lastPageButton')
+    const maxPage = totalPages()
+
+    if (pagerInfo) {
+        pagerInfo.textContent = `Halaman ${state.currentPage} dari ${maxPage}`
+    }
+
+    if (firstButton) {
+        firstButton.disabled = state.currentPage <= 1
+    }
+
+    if (prevButton) {
+        prevButton.disabled = state.currentPage <= 1
+    }
+
+    if (nextButton) {
+        nextButton.disabled = state.currentPage >= maxPage
+    }
+
+    if (lastButton) {
+        lastButton.disabled = state.currentPage >= maxPage
+    }
+}
+
+function createCell(text, className = '') {
+    const cell = document.createElement('td')
+    if (className) {
+        cell.className = className
+    }
+    cell.textContent = text
+    return cell
+}
+
+function renderTable() {
+    const tbody = document.getElementById('komunitasTableBody')
+    if (!tbody) {
+        return
+    }
+
+    tbody.innerHTML = ''
+
+    if (!state.filteredRows.length) {
+        const row = document.createElement('tr')
+        const cell = document.createElement('td')
+        cell.colSpan = 8
+        cell.className = 'empty-state'
+        cell.textContent = 'Belum ada data komunitas yang sesuai dengan filter.'
+        row.appendChild(cell)
+        tbody.appendChild(row)
+        updatePager()
+        updateTableSummary()
+        return
+    }
+
+    const startIndex = (state.currentPage - 1) * state.pageSize
+    const pageRows = state.filteredRows.slice(startIndex, startIndex + state.pageSize)
+
+    pageRows.forEach((rowData, index) => {
+        const row = document.createElement('tr')
+        const fakeAccount = isFakeAccount(rowData.flag_author, rowData.Author)
+
+        if (fakeAccount) {
+            row.classList.add('fake-row')
+        }
+
+        row.appendChild(createCell(String(startIndex + index + 1), 'row-number'))
+        row.appendChild(createCell(displayText(rowData.author_id), 'id-cell'))
+
+        const accountCell = document.createElement('td')
+        accountCell.className = 'account-cell'
+        const accountName = document.createElement('div')
+        accountName.className = 'account-name'
+
+        const accountText = document.createElement('span')
+        accountText.textContent = displayAuthorName(rowData.Author)
+        accountName.appendChild(accountText)
+
+        if (fakeAccount) {
+            const fakeMarker = document.createElement('span')
+            fakeMarker.className = 'fake-marker'
+            fakeMarker.textContent = '*'
+            fakeMarker.title = 'Nama fiktif'
+            fakeMarker.setAttribute('aria-label', 'Nama fiktif')
+            accountName.appendChild(fakeMarker)
+        }
+
+        accountCell.appendChild(accountName)
+        row.appendChild(accountCell)
+        row.appendChild(createCell(displayGroupName(rowData.group_name), 'group-cell'))
+
+        const contentCell = document.createElement('td')
+        contentCell.className = 'content-cell'
+        const contentText = document.createElement('div')
+        contentText.className = 'description-text'
+        contentText.textContent = displayText(rowData.content)
+        contentCell.appendChild(contentText)
+        row.appendChild(contentCell)
+
+        const commentCell = document.createElement('td')
+        commentCell.className = 'comment-cell'
+        const commentText = document.createElement('div')
+        commentText.className = 'description-text'
+        commentText.textContent = displayText(rowData.comments)
+        commentCell.appendChild(commentText)
+        row.appendChild(commentCell)
+
+        row.appendChild(createCell(formatDateTime(rowData.Posted_At), 'date-cell'))
+
+        const statusCell = document.createElement('td')
+        const statusBadge = document.createElement('span')
+        statusBadge.className = `badge ${statusBadgeClass(rowData.kategori_final)}`
+        statusBadge.textContent = statusLabel(rowData.kategori_final)
+        statusCell.appendChild(statusBadge)
+        row.appendChild(statusCell)
+
+        tbody.appendChild(row)
+    })
+
+    updatePager()
+    updateTableSummary()
+}
+
+function setTableStatus(text, isVisible = true) {
+    const container = document.getElementById('tableStatus')
+    const content = document.getElementById('tableStatusText')
+
+    if (content) {
+        content.textContent = text
+    }
+
+    if (container) {
+        container.style.display = isVisible ? 'inline-flex' : 'none'
+    }
+}
+
+function toggleExportButtons(disabled) {
+    document.getElementById('exportExcelButton').disabled = disabled
+    document.getElementById('exportCsvButton').disabled = disabled
+    document.getElementById('exportJsonButton').disabled = disabled
+}
+
+function serializeExportRows() {
+    return state.filteredRows.map(row => ({
+        author_id: row.author_id ?? '',
+        nama_akun: displayAuthorName(row.Author),
+        grup_komunitas: displayGroupName(row.group_name),
+        isi_postingan: displayText(row.content),
+        komentar: displayText(row.comments),
+        tanggal_posting: formatDateTime(row.Posted_At),
+        status_akun: statusLabel(row.kategori_final),
+        flag_author: row.flag_author ?? '',
+    }))
+}
+
+function downloadBlob(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+}
+
+function exportJson() {
+    downloadBlob(
+        JSON.stringify(serializeExportRows(), null, 2),
+        'komunitas_sulteng.json',
+        'application/json;charset=utf-8'
+    )
+}
+
+function escapeCsvValue(value) {
+    const text = String(value ?? '')
+    if (text.includes('"') || text.includes(',') || text.includes('\n')) {
+        return `"${text.replace(/"/g, '""')}"`
+    }
+    return text
+}
+
+function exportCsv() {
+    const rows = serializeExportRows()
+    if (!rows.length) {
+        return
+    }
+
+    const headers = Object.keys(rows[0])
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(row => headers.map(header => escapeCsvValue(row[header])).join(',')),
+    ].join('\n')
+
+    downloadBlob(csvContent, 'komunitas_sulteng.csv', 'text/csv;charset=utf-8')
+}
+
+function exportExcel() {
+    const rows = serializeExportRows()
+    if (!rows.length) {
+        return
+    }
+
+    if (!window.XLSX) {
+        exportCsv()
+        return
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Komunitas Dashboard')
+    XLSX.writeFile(workbook, 'komunitas_sulteng.xlsx')
+}
+
+function applyFilters({ resetPage = true, animateStats = false } = {}) {
+    const availableGroups = getAvailableFilterValues('groupFilterOptions')
+    const availableStatuses = getAvailableFilterValues('statusFilterOptions')
+    const useAllGroups = availableGroups.length > 0 && state.filters.groups.size === availableGroups.length
+    const useAllStatuses = availableStatuses.length > 0 && state.filters.statuses.size === availableStatuses.length
+
+    state.filteredRows = state.allRows.filter(row => {
+        const matchesGroup = useAllGroups || state.filters.groups.has(displayGroupName(row.group_name))
+        const matchesStatus = useAllStatuses || state.filters.statuses.has(normalizeStatusKey(row.kategori_final))
+
+        return matchesGroup && matchesStatus
+    })
+    .sort((a, b) => {
+        const timestampDelta = getPostingTimestamp(b.Posted_At) - getPostingTimestamp(a.Posted_At)
+        if (timestampDelta !== 0) {
+            return timestampDelta
+        }
+
+        return collator.compare(displayAuthorName(a.Author), displayAuthorName(b.Author))
+    })
+
+    state.currentPage = resetPage ? 1 : Math.min(state.currentPage, totalPages())
+
+    updateFocusedPanelContent()
+    renderStats(state.filteredRows, animateStats)
+    renderPieChart(state.filteredRows)
+    renderGroupChart(state.filteredRows)
+    renderTopAuthorsChart()
+    renderTable()
+    toggleExportButtons(state.filteredRows.length === 0)
+}
+
+function goToPage(pageNumber) {
+    state.currentPage = Math.min(Math.max(pageNumber, 1), totalPages())
+    renderTable()
+}
+
+function bindControls() {
+    document.querySelectorAll('.filter-menu').forEach(menu => {
+        menu.addEventListener('toggle', () => {
+            if (menu.open) {
+                closeFilterMenus(menu)
+            }
+        })
+    })
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.filter-menu')) {
+            closeFilterMenus()
+        }
+    })
+
+    document.getElementById('firstPageButton').addEventListener('click', () => {
+        goToPage(1)
+    })
+
+    document.getElementById('prevPageButton').addEventListener('click', () => {
+        goToPage(state.currentPage - 1)
+    })
+
+    document.getElementById('nextPageButton').addEventListener('click', () => {
+        goToPage(state.currentPage + 1)
+    })
+
+    document.getElementById('lastPageButton').addEventListener('click', () => {
+        goToPage(totalPages())
+    })
+
+    document.getElementById('groupFilterOptions').addEventListener('change', event => {
+        if (event.target instanceof HTMLInputElement) {
+            const checkedValues = getCheckedValues('groupFilterOptions')
+            if (checkedValues.length === 0) {
+                event.target.checked = true
+            }
+        }
+        syncFiltersFromUI()
+        applyFilters()
+    })
+
+    document.getElementById('statusFilterOptions').addEventListener('change', event => {
+        if (event.target instanceof HTMLInputElement) {
+            const checkedValues = getCheckedValues('statusFilterOptions')
+            if (checkedValues.length === 0) {
+                event.target.checked = true
+            }
+        }
+        syncFiltersFromUI()
+        applyFilters()
+    })
+
+    document.getElementById('resetFilterButton').addEventListener('click', () => {
+        setAllFilterOptions('groupFilterOptions', true)
+        setAllFilterOptions('statusFilterOptions', true)
+        syncFiltersFromUI()
+        applyFilters()
+        closeFilterMenus()
+    })
+
+    document.getElementById('exportExcelButton').addEventListener('click', exportExcel)
+    document.getElementById('exportCsvButton').addEventListener('click', exportCsv)
+    document.getElementById('exportJsonButton').addEventListener('click', exportJson)
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw new Error(`Gagal memuat ${url}`)
+    }
+    return response.json()
+}
+
+async function loadCommunityData() {
+    setTableStatus('Sedang memuat data...', true)       
+    toggleExportButtons(true)
+    setLoadingMessage(
+        'Sedang memuat data',
+        'Menyiapkan ringkasan dashboard, mohon tunggu sebentar.'
+    )
+    const loadingFallbackTimer = window.setTimeout(revealPage, 800)
+
+    const [masterRows, intensityRows] = await Promise.all([
+        fetchJson('/api/komunitas/master/'),
+        fetchJson('/api/komunitas/intensitas/'),
+    ])
+
+    state.allRows = Array.isArray(masterRows) ? masterRows : []
+    state.intensityRows = Array.isArray(intensityRows) ? intensityRows : []
+    window.clearTimeout(loadingFallbackTimer)
+    revealPage()
+    await waitForNextPaint()
+    populateGroupFilter(state.allRows)
+    initializeStatusFilterSelections()
+    applyFilters({ animateStats: !state.hasAnimatedStats })
+    state.hasAnimatedStats = true
+    setTableStatus('Data komunitas berhasil dimuat.', false)
+}
+
+async function initializeKomunitasPage() {
+    updateHeaderOnScroll()
+    bindControls()
+
+    try {
+        await loadCommunityData()
+    } catch (error) {
+        revealPage()
+        setLoadingMessage(
+            'Gagal memuat data',
+            'Terjadi kendala saat mengambil data dashboard. Silakan muat ulang halaman.'
+        )
+        setTableStatus('Gagal memuat data. Silakan muat ulang halaman.', true)
+        console.error(error)
+    }
+}
+
+window.addEventListener('scroll', updateHeaderOnScroll, { passive: true })
+window.addEventListener('resize', updateHeaderOnScroll)
+window.addEventListener('DOMContentLoaded', initializeKomunitasPage)
+</script>
+</body>
+</html>

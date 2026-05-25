@@ -1,0 +1,50 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments and local environment files
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+env/
+ENV/
+
+# Django local runtime files
+*.log
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+
+# Local server output
+*.out.log
+*.err.log
+
+# Data exports, raw/private inputs, and debugging captures
+exports/
+debug_fb/
+data/raw_export/
+fb_rescue_scraper/input/
+fb_rescue_scraper/output/
+
+# Spreadsheet/data files that may contain private or bulky local data
+*.xlsx
+*.xls
+*.csv
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+

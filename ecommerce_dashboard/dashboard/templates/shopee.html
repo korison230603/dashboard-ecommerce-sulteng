@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Toko Shopee Sulawesi Tengah</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #fff4ef;
+            --panel: rgba(255, 255, 255, 0.95);
+            --panel-strong: #ffffff;
+            --text: #311711;
+            --muted: #7c5b55;
+            --line: rgba(148, 163, 184, 0.18);
+            --shadow: 0 24px 58px rgba(15, 23, 42, 0.10);
+            --green: #ee4d2d;
+            --green-soft: rgba(238, 77, 45, 0.14);
+            --teal: #f97316;
+            --teal-soft: rgba(249, 115, 22, 0.14);
+            --amber: #f59e0b;
+            --amber-soft: rgba(245, 158, 11, 0.14);
+            --slate: #475569;
+            --slate-soft: rgba(71, 85, 105, 0.12);
+            --sidebar-width: 96px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(238, 77, 45, 0.15), transparent 26%),
+                radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 22%),
+                linear-gradient(180deg, #fff8f4 0%, var(--bg) 100%);
+            min-height: 100vh;
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 244, 239, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        body.ready #loading {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-card {
+            width: min(92vw, 420px);
+            padding: 28px;
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.76);
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 16px;
+            border-radius: 999px;
+            border: 4px solid rgba(238, 77, 45, 0.15);
+            border-top-color: var(--green);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-title {
+            margin: 0;
+            font-size: 1.06rem;
+            font-weight: 700;
+        }
+
+        .loading-subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+            z-index: 120;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: rgba(226, 232, 240, 0.78);
+            text-align: center;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            background: rgba(148, 163, 184, 0.12);
+            color: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            color: #ffffff;
+            box-shadow:
+                inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+                0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(148, 163, 184, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .nav-icon-grabfood {
+            background: linear-gradient(135deg, rgba(0, 177, 79, 0.34), rgba(0, 122, 61, 0.26));
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-facebook {
+            background: linear-gradient(135deg, rgba(24, 119, 242, 0.32), rgba(37, 99, 235, 0.22));
+        }
+
+        .nav-icon-facebook svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-icon-tokopedia {
+            background: linear-gradient(135deg, rgba(3, 172, 14, 0.28), rgba(15, 118, 110, 0.20));
+        }
+
+        .nav-icon-tokopedia svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-shopee {
+            background: linear-gradient(135deg, rgba(238, 77, 45, 0.32), rgba(249, 115, 22, 0.24));
+        }
+
+        .nav-icon-shopee svg {
+            width: 24px;
+            height: 24px;
+        }
+        .nav-icon-lazada {
+            background: linear-gradient(135deg, rgba(26, 46, 138, 0.32), rgba(245, 114, 36, 0.24));
+        }
+
+        .nav-icon-blibli {
+            background: linear-gradient(135deg, rgba(0, 149, 218, 0.32), rgba(0, 174, 239, 0.24));
+        }
+        .nav-icon-lazada svg,
+        .nav-icon-blibli svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-facebook,
+        .nav-icon-tokopedia,
+        .nav-icon-shopee,
+        .nav-icon-lazada,
+        .nav-icon-blibli {
+            background-color: transparent;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 72%;
+            box-shadow: none;
+            overflow: hidden;
+        }
+
+
+        .nav-icon-facebook {
+            background-image: url('/static/dashboard/images/facebook.png');
+            background-size: 76%;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .nav-icon-tokopedia {
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-shopee {
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 78%;
+        }
+
+        .nav-icon-lazada {
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 82%;
+        }
+
+        .nav-icon-blibli {
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .nav-icon-facebook svg,
+        .nav-icon-tokopedia svg,
+        .nav-icon-shopee svg,
+        .nav-icon-lazada svg,
+        .nav-icon-blibli svg {
+            display: none;
+        }
+        .main-stage {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            z-index: 110;
+            background: rgba(255, 248, 244, 0.84);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+            transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .site-header.is-compact {
+            background: rgba(255, 248, 244, 0.72);
+            border-color: rgba(203, 213, 225, 0.78);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .site-header-inner {
+            width: min(1320px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 16px 0 14px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: start;
+            transition: padding 0.28s ease;
+        }
+
+        .site-header.is-compact .site-header-inner {
+            padding: 10px 0;
+        }
+
+        .page-heading {
+            display: grid;
+            gap: 4px;
+            max-height: 120px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow: hidden;
+            transition: opacity 0.24s ease, transform 0.24s ease, max-height 0.24s ease;
+        }
+
+        .site-header.is-compact .page-heading {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            line-height: 1.05;
+        }
+
+        .page-subtitle {
+            margin: 0;
+            font-size: clamp(1rem, 1.4vw, 1.18rem);
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--muted);
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-card {
+            padding: 12px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+            transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(238, 77, 45, 0.18);
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .nav-card.active {
+            background: linear-gradient(135deg, #ee4d2d 0%, #f97316 100%);
+            color: #eff6ff;
+            box-shadow: 0 18px 34px rgba(238, 77, 45, 0.22);
+        }
+
+        .site-header.is-compact .nav-card,
+        .site-header.is-compact .nav-card:hover {
+            background: rgba(255, 255, 255, 0.90);
+            border-color: rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .site-header.is-compact .nav-card.active {
+            background: linear-gradient(135deg, #ee4d2d 0%, #f97316 100%);
+            color: #eff6ff;
+            border-color: transparent;
+            box-shadow: 0 16px 30px rgba(238, 77, 45, 0.20);
+        }
+
+        .page-shell {
+            width: min(1320px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 152px 0 40px;
+            display: grid;
+            gap: 22px;
+        }
+
+        .hero {
+            display: grid;
+            gap: 16px;
+            padding: 32px;
+            border-radius: 32px;
+            background:
+                linear-gradient(135deg, rgba(80, 29, 19, 0.96), rgba(122, 41, 21, 0.92)),
+                linear-gradient(135deg, rgba(238, 77, 45, 0.18), rgba(249, 115, 22, 0.16));
+            box-shadow: 0 28px 54px rgba(15, 23, 42, 0.16);
+            color: #ffffff;
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            width: fit-content;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2rem, 3vw, 2.75rem);
+            line-height: 1.14;
+            max-width: 760px;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 860px;
+            color: rgba(226, 232, 240, 0.88);
+            line-height: 1.72;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: visible;
+            padding: 22px;
+            border-radius: 24px;
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.76);
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 14px;
+            isolation: isolate;
+        }
+
+        .stat-card:hover,
+        .stat-card:focus-within {
+            z-index: 30;
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -24px -24px auto;
+            width: 100px;
+            height: 100px;
+            border-radius: 999px;
+            opacity: 0.85;
+        }
+
+        .stat-green::after {
+            background: var(--green-soft);
+        }
+
+        .stat-teal::after {
+            background: var(--teal-soft);
+        }
+
+        .stat-amber::after {
+            background: var(--amber-soft);
+        }
+
+        .stat-slate::after {
+            background: var(--slate-soft);
+        }
+
+        .stat-label {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding-right: 34px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.03em;
+        }
+
+        .stat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-flex;
+        }
+
+        .stat-dot-green {
+            background: var(--green);
+        }
+
+        .stat-dot-teal {
+            background: var(--teal);
+        }
+
+        .stat-dot-amber {
+            background: var(--amber);
+        }
+
+        .stat-dot-slate {
+            background: var(--slate);
+        }
+
+        .stat-value {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: clamp(1.8rem, 2.2vw, 2.3rem);
+            letter-spacing: -0.03em;
+        }
+
+        .dashboard-header,
+        .stats-grid,
+        .panel {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease,
+                background 0.28s ease;
+            will-change: opacity, transform;
+        }
+
+        body:not(.ready) .dashboard-header,
+        body:not(.ready) .stats-grid,
+        body:not(.ready) .panel {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        body.ready .stats-grid {
+            transition-delay: 80ms;
+        }
+
+        body.ready .panel {
+            transition-delay: 150ms;
+        }
+
+        .info-chip {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 20;
+        }
+
+        .info-chip:hover,
+        .info-chip:focus-within {
+            z-index: 120;
+        }
+
+        .info-button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--muted);
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .info-tooltip {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: min(280px, calc(100vw - 48px));
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+            z-index: 121;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .info-chip:hover .info-tooltip,
+        .info-chip:focus-within .info-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .info-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.14), 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .filter-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 80;
+        }
+
+        .filter-menu {
+            position: relative;
+        }
+
+        .filter-menu[open] {
+            z-index: 120;
+        }
+
+        .filter-trigger {
+            min-width: 190px;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .filter-trigger::marker,
+        .filter-trigger::-webkit-details-marker {
+            display: none;
+        }
+
+        .filter-count {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 240px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 130;
+            padding: 10px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(211, 240, 215, 0.95);
+            box-shadow: 0 20px 34px rgba(15, 23, 42, 0.12);
+        }
+
+        .filter-option-list {
+            display: grid;
+            gap: 4px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .filter-option:hover {
+            background: rgba(255, 248, 244, 0.96);
+        }
+
+        .filter-option input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--green);
+        }
+
+        .filter-reset {
+            min-width: 122px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 14px;
+            font: inherit;
+            color: var(--text);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .button:focus {
+            outline: none;
+            border-color: rgba(238, 77, 45, 0.36);
+            box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.10);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 14px;
+            font: inherit;
+            color: var(--text);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, var(--green), #f97316);
+            border-color: transparent;
+            color: #ffffff;
+            box-shadow: 0 18px 30px rgba(238, 77, 45, 0.18);
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .panel {
+            position: relative;
+            padding: 24px;
+            border-radius: 26px;
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.76);
+            box-shadow: var(--shadow);
+        }
+
+        .panel-title-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .panel-kicker {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: rgba(238, 77, 45, 0.08);
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .panel-header {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 16px;
+            padding-right: 34px;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.06rem;
+        }
+
+        .chart-box {
+            position: relative;
+            height: 320px;
+        }
+
+        .table-panel {
+            display: grid;
+            gap: 16px;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .table-title {
+            display: grid;
+            gap: 6px;
+        }
+
+        .table-title h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .table-title p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .table-status,
+        .table-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .table-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.12);
+            flex-shrink: 0;
+        }
+
+        .table-status.is-error .table-status-dot {
+            background: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.10);
+        }
+
+        .table-wrapper {
+            overflow: auto;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            vertical-align: top;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #f8fcf8;
+            font-size: 0.82rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+            z-index: 1;
+        }
+
+        tbody tr:hover {
+            background: rgba(238, 77, 45, 0.04);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            padding: 28px 16px;
+        }
+
+        .link-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(238, 77, 45, 0.10);
+            color: #047857;
+            text-decoration: none;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .table-meta .info-chip {
+            position: relative;
+            top: auto;
+            right: auto;
+        }
+
+        .table-meta .info-tooltip {
+            top: calc(100% + 8px);
+            right: auto;
+            left: 0;
+        }
+
+        .pager {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pager-info {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        @media (max-width: 1240px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 980px) {
+            :root {
+                --sidebar-width: 100%;
+            }
+
+            .sidebar {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: column;
+                gap: 10px;
+            }
+
+            .nav-item {
+                min-width: 84px;
+                min-height: auto;
+                padding: 10px 8px;
+            }
+
+            .nav-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
+            }
+
+            .main-stage {
+                margin-left: 0;
+            }
+
+            .site-header {
+                top: 88px;
+                left: 0;
+            }
+
+            .page-shell {
+                width: min(100% - 28px, 1320px);
+                padding-top: 282px;
+            }
+
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .site-header-inner,
+            .table-header,
+            .table-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .nav-container {
+                justify-content: flex-start;
+            }
+
+            .table-actions,
+            .pager {
+                width: 100%;
+            }
+
+            .filter-menu {
+                width: 100%;
+            }
+
+            .filter-dropdown {
+                position: static;
+                min-width: 100%;
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: row;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+
+            .site-header {
+                top: 152px;
+            }
+
+            .site-header-inner,
+            .page-shell {
+                width: min(100% - 28px, 100%);
+            }
+
+            .page-shell {
+                padding-top: 352px;
+            }
+
+            .filter-toolbar {
+                display: grid;
+                gap: 10px;
+            }
+
+            .panel,
+            .stat-card,
+            .loading-card {
+                border-radius: 24px;
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button,
+            .nav-card,
+            .filter-trigger,
+            .filter-reset {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dashboard-header,
+            .stats-grid,
+            .panel {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+        }
+    
+        /* Sidebar safety: keep the final GrabFood item visible on short screens. */
+        .sidebar {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .sidebar-nav {
+            padding-bottom: 14px;
+        }
+
+        .nav-item {
+            min-height: 68px; /* keep 7 sidebar items visible */
+        }
+
+        .nav-icon-grabfood {
+            background: rgba(0, 177, 79, 0.16);
+        }
+    
+        .nav-item {
+            min-height: 64px;
+            padding: 7px 5px;
+            gap: 5px;
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+        }
+    
+
+        /* Professional sidebar logo treatment shared across dashboard pages. */
+        .sidebar .nav-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.94);
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.30);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.90),
+                0 10px 20px rgba(2, 6, 23, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover .nav-icon,
+        .sidebar .nav-item.active .nav-icon {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 14px 24px rgba(2, 6, 23, 0.28),
+                0 0 0 4px rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .nav-icon-menu {
+            color: #f8fafc;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(15, 118, 110, 0.26)),
+                rgba(15, 23, 42, 0.56);
+        }
+
+        .sidebar .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.22));
+        }
+
+        .sidebar .nav-icon-facebook {
+            background-color: #ffffff;
+            background-image: none;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .nav-icon-facebook .sidebar-logo {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sidebar .nav-icon-tokopedia {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-shopee {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 76%;
+        }
+
+        .sidebar .nav-icon-lazada {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 78%;
+        }
+
+        .sidebar .nav-icon-blibli {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-grabfood {
+            background: #ffffff;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .sidebar-logo {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .sidebar .nav-icon-grabfood .sidebar-logo {
+            width: 31px;
+            height: 31px;
+        }
+
+        .sidebar .nav-label {
+            letter-spacing: 0.02em;
+        }
+
+
+        /* Keep page titles restrained and subtitles light across dashboards. */
+        .page-title,
+        .hero h1,
+        h1 {
+            font-size: clamp(1.55rem, 2vw, 2.05rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle,
+        .hero p,
+        .subtitle {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: 0;
+        }
+
+
+        /* Tighten the spacing between page subtitles and filter controls. */
+        .site-header-inner {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        .page-heading {
+            gap: 2px;
+        }
+
+        .page-shell {
+            gap: 16px;
+        }
+
+        .filter-toolbar,
+        .filter-panel {
+            margin-top: 0;
+        }
+
+        .hero {
+            gap: 6px;
+        }
+
+        @media (min-width: 981px) {
+            .page-shell {
+                padding-top: 112px;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .page-shell {
+                padding-top: 232px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding-top: 202px;
+            }
+        }
+
+
+        /* BPS copyright footer shared across dashboard pages. */
+        .copyright-footer {
+            width: min(100% - 48px, 1320px);
+            margin: 24px auto 0;
+            padding: 14px 0 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.24);
+            color: var(--muted, #64748b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .copyright-footer {
+                width: min(100% - 28px, 100%);
+                margin-top: 18px;
+                padding-top: 12px;
+            }
+        }
+</style>
+</head>
+<body>
+<header id="siteHeader" class="site-header">
+    <div class="site-header-inner">
+        <div class="page-heading">
+            <h1 class="page-title">Dashboard Toko Shopee Sulawesi Tengah</h1>
+            <p class="page-subtitle">Analisis sebaran toko dan produk Shopee berdasarkan harga, kategori, dan kabupaten/kota.</p>
+        </div>
+
+    </div>
+</header>
+
+<div id="loading" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loadingTitle" class="loading-title">Sedang memuat dashboard Shopee</p>
+        <p id="loadingSubtitle" class="loading-subtitle">Menyiapkan kartu ringkasan, chart, dan tabel produk Shopee.</p>
+    </div>
+</div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi dashboard">
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item">
+                <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Ringkasan</span>
+            </a>
+
+            <a href="/facebook/" class="nav-item" aria-label="Overview Facebook">
+                <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+                <span class="nav-label">Facebook</span>
+            </a>
+
+            <a href="/tokopedia/" class="nav-item" aria-label="Dashboard Tokopedia">
+                <span class="nav-icon nav-icon-tokopedia" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.1 6.9L9.3 8H14.7L16.9 6.9L19 8.8L18.4 14.3C18.1 17.4 15.5 19.8 12.4 19.8H11.6C8.5 19.8 5.9 17.4 5.6 14.3L5 8.8L7.1 6.9Z" fill="#ffffff"/>
+                        <circle cx="9.6" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="14.4" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="9.6" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <circle cx="14.4" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <path d="M10.8 15.8H13.2L12 17.2L10.8 15.8Z" fill="#F59E0B"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Tokopedia</span>
+            </a>
+
+            <a href="/shopee/" class="nav-item active" aria-current="page" aria-label="Dashboard Shopee">
+                <span class="nav-icon nav-icon-shopee" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 8.3V7.8C8 5.7 9.7 4 11.8 4H12.2C14.3 4 16 5.7 16 7.8V8.3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M6.2 8.6H17.8L16.9 17.9C16.8 18.9 16 19.7 15 19.7H9C8 19.7 7.2 18.9 7.1 17.9L6.2 8.6Z" fill="#ffffff"/>
+                        <path d="M14.4 10.3C13.9 10.1 13.4 10 12.8 10C11.4 10 10.4 10.7 10.4 11.9C10.4 12.8 11 13.4 12.1 14L12.8 14.4C13.3 14.7 13.5 15 13.5 15.4C13.5 15.9 13.1 16.3 12.2 16.3C11.4 16.3 10.6 16 9.8 15.4V17.2C10.5 17.6 11.3 17.8 12.1 17.8C13.4 17.8 14.4 17 14.4 15.8C14.4 14.9 13.8 14.2 12.7 13.6L12.1 13.3C11.5 12.9 11.3 12.7 11.3 12.2C11.3 11.7 11.7 11.4 12.4 11.4C13.1 11.4 13.7 11.6 14.4 12.1V10.3Z" fill="#EE4D2D"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Shopee</span>
+            </a>
+            <a href="/lazada/" class="nav-item" aria-label="Dashboard Lazada">
+                <span class="nav-icon nav-icon-lazada" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4.2L19 8.1V15.9L12 19.8L5 15.9V8.1L12 4.2Z" fill="#ffffff"/>
+                        <path d="M8.3 9.4L12 7.3L15.7 9.4V14.6L12 16.7L8.3 14.6V9.4Z" fill="#1A2E8A"/>
+                        <path d="M9.6 9.7L12 11.1L14.4 9.7L15.5 11.5L12 14.6L8.5 11.5L9.6 9.7Z" fill="#F57224"/>
+                        <path d="M8.5 11.5L12 14.6L15.5 11.5V14.4L12 16.4L8.5 14.4V11.5Z" fill="#E0006D" fill-opacity="0.88"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Lazada</span>
+            </a>
+            <a href="/blibli/" class="nav-item" aria-label="Dashboard Blibli">
+                <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+                <span class="nav-label">Blibli</span>
+            </a>
+            <a href="/grabfood/" class="nav-item" aria-label="Dashboard GrabFood">
+                <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+                <span class="nav-label">GrabFood</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-stage">
+        <div class="page-shell">
+            <section class="filter-toolbar" aria-label="Filter Shopee">
+                <details class="filter-menu">
+                    <summary class="button filter-trigger">
+                        <span>Kab/Kota</span>
+                        <span id="locationFilterLabel" class="filter-count">Semua</span>
+                    </summary>
+                    <div id="locationFilterOptions" class="filter-dropdown filter-option-list"></div>
+                </details>
+
+                <details class="filter-menu">
+                    <summary class="button filter-trigger">
+                        <span>Kategori</span>
+                        <span id="categoryFilterLabel" class="filter-count">Semua</span>
+                    </summary>
+                    <div id="categoryFilterOptions" class="filter-dropdown filter-option-list"></div>
+                </details>
+
+                <button id="resetFilterButton" class="button button-primary filter-reset" type="button">Reset Filter</button>
+            </section>
+
+            <section class="stats-grid" aria-label="Ringkasan Shopee">
+                <article class="stat-card stat-green">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Total Produk">i</button>
+                        <div class="info-tooltip" role="tooltip">Jumlah produk yang tersedia pada dataset Shopee.</div>
+                    </div>
+                    <div class="stat-label">
+                        <span class="stat-dot stat-dot-green"></span>
+                        Total Produk
+                    </div>
+                    <h2 id="totalProducts" class="stat-value">0</h2>
+                </article>
+
+                <article class="stat-card stat-teal">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Total Toko">i</button>
+                        <div class="info-tooltip" role="tooltip">Jumlah toko unik yang teridentifikasi dari data Shopee.</div>
+                    </div>
+                    <div class="stat-label">
+                        <span class="stat-dot stat-dot-teal"></span>
+                        Total Toko
+                    </div>
+                    <h2 id="totalStores" class="stat-value">0</h2>
+                </article>
+
+                <article class="stat-card stat-amber">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Rata-rata Harga">i</button>
+                        <div class="info-tooltip" role="tooltip">Rata-rata harga dari produk yang sedang ditampilkan.</div>
+                    </div>
+                    <div class="stat-label">
+                        <span class="stat-dot stat-dot-amber"></span>
+                        Rata-rata Harga
+                    </div>
+                    <h2 id="averagePrice" class="stat-value">Rp0</h2>
+                </article>
+
+                <article class="stat-card stat-slate">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Lokasi Dominan">i</button>
+                        <div class="info-tooltip" role="tooltip">Lokasi dengan jumlah produk terbanyak pada hasil filter saat ini.</div>
+                    </div>
+                    <div class="stat-label">
+                        <span class="stat-dot stat-dot-slate"></span>
+                        Lokasi Dominan
+                    </div>
+                    <h2 id="topLocation" class="stat-value">-</h2>
+                </article>
+            </section>
+
+            <section class="section-grid">
+                <article class="panel">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Top Kategori Produk">i</button>
+                        <div class="info-tooltip" role="tooltip">Kategori produk dengan jumlah item terbanyak pada Shopee.</div>
+                    </div>
+                    <div class="panel-header">
+                        <h3>Top Kategori Produk</h3>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Distribusi Rentang Harga">i</button>
+                        <div class="info-tooltip" role="tooltip">Histogram ini memperlihatkan sebaran jumlah produk berdasarkan kelompok harga agar pola harga lebih mudah dibaca.</div>
+                    </div>
+                    <div class="panel-header">
+                        <h3>Distribusi Rentang Harga</h3>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Produk per Lokasi">i</button>
+                        <div class="info-tooltip" role="tooltip">Jumlah produk per kabupaten atau kota ditampilkan dengan skala logaritmik agar lokasi selain Palu tetap terlihat.</div>
+                    </div>
+                    <div class="panel-header">
+                        <h3>Produk per Lokasi</h3>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="productLocationChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="info-chip">
+                        <button class="info-button" type="button" aria-label="Info Toko per Lokasi">i</button>
+                        <div class="info-tooltip" role="tooltip">Jumlah toko unik per kabupaten atau kota ditampilkan dengan skala logaritmik agar distribusi lokasi lebih seimbang terlihat.</div>
+                    </div>
+                    <div class="panel-header">
+                        <h3>Toko per Lokasi</h3>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="storeLocationChart"></canvas>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel table-panel">
+                <div class="table-header">
+                    <div class="table-title">
+                        <h3>Data Shopee</h3>
+                        <p id="tableSummary">Menyiapkan tabel Shopee.</p>
+                    </div>
+
+                    <div class="table-actions">
+                        <button id="exportExcelButton" class="button" type="button" disabled>Export Excel</button>
+                        <button id="exportCsvButton" class="button" type="button" disabled>Export CSV</button>
+                        <button id="exportJsonButton" class="button" type="button" disabled>Export JSON</button>
+                    </div>
+                </div>
+
+                <div id="tableStatus" class="table-status">
+                    <span class="table-status-dot" aria-hidden="true"></span>
+                    <span id="tableStatusText">Memuat data Shopee...</span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table aria-label="Data Shopee">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>ID</th>
+                                <th>Toko</th>
+                                <th>Produk</th>
+                                <th>Harga</th>
+                                <th>Lokasi</th>
+                                <th>Kategori</th>
+                                <th>Tautan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shopeeTableBody">
+                            <tr>
+                                <td colspan="8" class="empty-state">Memuat data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div class="table-meta">
+                        <span>Info Filter</span>
+                        <span class="info-chip">
+                            <button class="info-button" type="button" aria-label="Info filter tabel">i</button>
+                            <span class="info-tooltip" role="tooltip">Filter aktif akan memengaruhi kartu ringkasan, chart, tabel, dan hasil export.</span>
+                        </span>
+                    </div>
+
+                    <div class="pager">
+                        <button id="firstPageButton" class="button" type="button" disabled>&lt;&lt;</button>
+                        <button id="prevPageButton" class="button" type="button" disabled>&lt;</button>
+                        <span id="pagerInfo" class="pager-info">Halaman 1 dari 1</span>
+                        <button id="nextPageButton" class="button" type="button" disabled>&gt;</button>
+                        <button id="lastPageButton" class="button" type="button" disabled>&gt;&gt;</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer class="copyright-footer" aria-label="Copyright">&copy; BPS SULTENG 2026</footer>
+</main>
+</div>
+
+<script>
+const siteHeader = document.getElementById('siteHeader')
+const state = {
+    charts: {},
+    allRows: [],
+    filteredRows: [],
+    currentPage: 1,
+    pageSize: 10,
+    filters: {
+        locations: new Set(),
+        categories: new Set(),
+    },
+}
+
+function toNumber(value) {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : 0
+    }
+
+    if (typeof value === 'string') {
+        const normalized = value.replace(/[^\d-]/g, '')
+        if (!normalized) {
+            return 0
+        }
+
+        const parsedFromString = Number(normalized)
+        return Number.isFinite(parsedFromString) ? parsedFromString : 0
+    }
+
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+function formatNumber(value) {
+    return toNumber(value).toLocaleString('id-ID')
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+    }).format(toNumber(value))
+}
+
+function setText(id, value) {
+    const element = document.getElementById(id)
+    if (element) {
+        setElementText(element, value)
+    }
+}
+
+function parseDisplayNumber(value) {
+    const text = String(value ?? '').trim()
+    if (!text || text === '-') return null
+    const numericText = text.replace(/[^\d,.-]/g, '')
+    if (!numericText || numericText === '-' || numericText === ',') return null
+    const normalized = numericText.includes(',')
+        ? numericText.replace(/\./g, '').replace(',', '.')
+        : numericText.replace(/[.,]/g, '')
+    const number = Number(normalized)
+    return Number.isFinite(number) ? number : null
+}
+
+function formatAnimatedValue(template, value) {
+    const text = String(template ?? '')
+    const decimalMatch = text.match(/,(\d+)/)
+    const fractionDigits = decimalMatch ? decimalMatch[1].length : 0
+    const formattedNumber = value.toLocaleString('id-ID', {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+    })
+    if (/^Rp/i.test(text.trim())) return `Rp${formattedNumber}`
+    if (text.trim().endsWith('%')) return `${formattedNumber}%`
+    return formattedNumber
+}
+
+function shouldAnimateText(element, value) {
+    return element.classList.contains('stat-value') && parseDisplayNumber(value) !== null
+}
+
+function setElementText(element, value) {
+    if (!shouldAnimateText(element, value)) {
+        element.textContent = value
+        return
+    }
+    const target = parseDisplayNumber(value)
+    const start = parseDisplayNumber(element.textContent) ?? 0
+    const template = String(value)
+    if (element.dataset.animationFrame) {
+        cancelAnimationFrame(Number(element.dataset.animationFrame))
+    }
+    const duration = 900
+    const startedAt = performance.now()
+    const step = now => {
+        const progress = Math.min((now - startedAt) / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        element.textContent = formatAnimatedValue(template, start + ((target - start) * eased))
+        if (progress < 1) {
+            element.dataset.animationFrame = requestAnimationFrame(step)
+        } else {
+            element.textContent = template
+            delete element.dataset.animationFrame
+        }
+    }
+    element.dataset.animationFrame = requestAnimationFrame(step)
+}
+
+function setLoadingMessage(title, subtitle) {
+    setText('loadingTitle', title)
+    setText('loadingSubtitle', subtitle)
+}
+
+function waitForNextPaint() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+    })
+}
+
+function setTableStatus(message, isError = false) {
+    const status = document.getElementById('tableStatus')
+    setText('tableStatusText', message)
+    status.classList.toggle('is-error', Boolean(isError))
+}
+
+function syncHeaderState() {
+    if (!siteHeader) {
+        return
+    }
+
+    if (window.scrollY > 28) {
+        siteHeader.classList.add('is-compact')
+    } else {
+        siteHeader.classList.remove('is-compact')
+    }
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + width - radius, y)
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
+    ctx.lineTo(x + width, y + height - radius)
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+    ctx.lineTo(x + radius, y + height)
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+}
+
+function drawCleanBadge(ctx, x, y, width, height) {
+    ctx.save()
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'
+    ctx.strokeStyle = 'rgba(203, 213, 225, 0.9)'
+    ctx.lineWidth = 1
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.08)'
+    ctx.shadowBlur = 10
+    ctx.shadowOffsetY = 3
+    drawRoundedRect(ctx, x, y, width, height, 12)
+    ctx.fill()
+    ctx.shadowColor = 'transparent'
+    ctx.stroke()
+    ctx.restore()
+}
+
+const shopeeValueLabelPlugin = {
+    id: 'shopeeValueLabel',
+    afterDatasetsDraw(chart, args, pluginOptions) {
+        if (!pluginOptions || !pluginOptions.enabled || chart.config.type !== 'bar') {
+            return
+        }
+
+        const formatter = typeof pluginOptions.formatter === 'function'
+            ? pluginOptions.formatter
+            : value => String(value)
+        const placement = pluginOptions.placement || 'auto'
+        const { ctx, chartArea } = chart
+        const isHorizontal = chart.options.indexAxis === 'y'
+
+        ctx.save()
+        ctx.textBaseline = 'middle'
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex)
+            if (meta.hidden) {
+                return
+            }
+
+            meta.data.forEach((bar, index) => {
+                const value = toNumber(dataset.data[index])
+                if (value <= 0) {
+                    return
+                }
+
+                const label = formatter(value)
+                const start = isHorizontal ? Math.min(bar.base, bar.x) : Math.min(bar.base, bar.y)
+                const end = isHorizontal ? Math.max(bar.base, bar.x) : Math.max(bar.base, bar.y)
+                const size = Math.abs(end - start)
+
+                ctx.font = '600 11px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+
+                if (isHorizontal && size >= 72) {
+                    ctx.textAlign = 'right'
+                    ctx.fillStyle = '#ffffff'
+                    ctx.shadowColor = 'rgba(15, 23, 42, 0.22)'
+                    ctx.shadowBlur = 6
+                    ctx.fillText(label, end - 10, bar.y)
+                    ctx.shadowColor = 'transparent'
+                    return
+                }
+
+                const textWidth = ctx.measureText(label).width
+                const badgeWidth = textWidth + 16
+                const badgeHeight = 22
+
+                if (!isHorizontal && placement === 'inside-top') {
+                    ctx.textAlign = 'center'
+                    ctx.fillStyle = '#ffffff'
+                    ctx.shadowColor = 'rgba(15, 23, 42, 0.26)'
+                    ctx.shadowBlur = 6
+                    const textY = Math.min(bar.base - 10, end + 14)
+                    ctx.fillText(label, bar.x, textY)
+                    ctx.shadowColor = 'transparent'
+                    return
+                }
+
+                const badgeX = isHorizontal
+                    ? Math.min(end + 8, chartArea.right - badgeWidth)
+                    : Math.max(chartArea.left + 4, Math.min(bar.x - (badgeWidth / 2), chartArea.right - badgeWidth - 4))
+                const badgeY = isHorizontal
+                    ? bar.y - (badgeHeight / 2)
+                    : Math.max(chartArea.top + 6, end - badgeHeight - 8)
+
+                drawCleanBadge(ctx, badgeX, badgeY, badgeWidth, badgeHeight)
+                ctx.textAlign = 'center'
+                ctx.fillStyle = '#142235'
+                ctx.fillText(label, badgeX + (badgeWidth / 2), badgeY + (badgeHeight / 2))
+            })
+        })
+
+        ctx.restore()
+    },
+}
+
+Chart.register(shopeeValueLabelPlugin)
+
+function destroyChart(key) {
+    if (state.charts[key]) {
+        state.charts[key].destroy()
+        state.charts[key] = null
+    }
+}
+
+function shortenLabel(value, maxLength = 28) {
+    const text = String(value || '-').trim()
+    if (text.length <= maxLength) {
+        return text
+    }
+    return `${text.slice(0, maxLength - 1)}...`
+}
+
+function formatCompactCurrency(value) {
+    const numericValue = toNumber(value)
+
+    if (numericValue >= 1000000000) {
+        return `Rp${(numericValue / 1000000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} M`
+    }
+
+    if (numericValue >= 1000000) {
+        return `Rp${(numericValue / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt`
+    }
+
+    if (numericValue >= 1000) {
+        return `Rp${(numericValue / 1000).toLocaleString('id-ID', { maximumFractionDigits: 0 })} Rb`
+    }
+
+    return formatCurrency(numericValue)
+}
+
+function getPercentile(sortedValues, percentile) {
+    if (!sortedValues.length) {
+        return 0
+    }
+
+    const safePercentile = Math.min(Math.max(percentile, 0), 1)
+    const index = Math.floor((sortedValues.length - 1) * safePercentile)
+    return sortedValues[Math.min(sortedValues.length - 1, Math.max(0, index))]
+}
+
+function getNiceStep(range, targetBucketCount) {
+    const safeRange = Math.max(1, range)
+    const safeBucketCount = Math.max(1, targetBucketCount)
+    const roughStep = Math.max(1, Math.ceil(safeRange / safeBucketCount))
+    const magnitude = 10 ** Math.floor(Math.log10(roughStep))
+    const normalized = roughStep / magnitude
+
+    if (normalized <= 1) {
+        return magnitude
+    }
+
+    if (normalized <= 2) {
+        return 2 * magnitude
+    }
+
+    if (normalized <= 5) {
+        return 5 * magnitude
+    }
+
+    return 10 * magnitude
+}
+
+function sortByValue(rows) {
+    return rows.sort((left, right) => {
+        const valueGap = toNumber(right.value) - toNumber(left.value)
+        if (valueGap !== 0) {
+            return valueGap
+        }
+
+        return String(left.label || '').localeCompare(String(right.label || ''), 'id')
+    })
+}
+
+function buildCountRows(rows, field, limit = 10) {
+    const counts = new Map()
+
+    rows.forEach(row => {
+        const label = String(row[field] || 'Tidak diketahui').trim() || 'Tidak diketahui'
+        counts.set(label, (counts.get(label) || 0) + 1)
+    })
+
+    return sortByValue(
+        Array.from(counts.entries(), ([label, value]) => ({ label, value }))
+    ).slice(0, limit)
+}
+
+function buildStoreLocationRows(rows, limit = 10) {
+    const counts = new Map()
+
+    rows.forEach(row => {
+        const lokasi = String(row.lokasi || 'Tidak diketahui').trim() || 'Tidak diketahui'
+        const toko = String(row.toko || '').trim()
+
+        if (!counts.has(lokasi)) {
+            counts.set(lokasi, new Set())
+        }
+
+        if (toko) {
+            counts.get(lokasi).add(toko)
+        }
+    })
+
+    return sortByValue(
+        Array.from(counts.entries(), ([label, stores]) => ({ label, value: stores.size }))
+    ).filter(row => row.value > 0).slice(0, limit)
+}
+
+function buildPriceHistogramRows(rows) {
+    const prices = rows
+        .map(row => toNumber(row.harga))
+        .filter(value => value > 0)
+        .sort((left, right) => left - right)
+
+    if (!prices.length) {
+        return []
+    }
+
+    const minPrice = prices[0]
+    const maxPrice = prices[prices.length - 1]
+
+    if (minPrice === maxPrice) {
+        return [{
+            label: formatCompactCurrency(minPrice),
+            value: prices.length,
+            start: minPrice,
+            end: maxPrice,
+        }]
+    }
+
+    const percentileCap = getPercentile(prices, 0.99)
+    const shouldCompressOutliers = percentileCap > minPrice && maxPrice >= percentileCap * 3
+
+    if (shouldCompressOutliers) {
+        const step = getNiceStep(percentileCap - minPrice + 1, 10)
+        const visibleMax = Math.max(minPrice, Math.ceil(percentileCap / step) * step)
+        const bucketCount = Math.max(1, Math.ceil((visibleMax - minPrice + 1) / step))
+        const buckets = Array.from({ length: bucketCount }, (_, index) => {
+            const start = minPrice + (index * step)
+            const end = Math.min(visibleMax, start + step - 1)
+
+            return {
+                label: `${formatCompactCurrency(start)} - ${formatCompactCurrency(end)}`,
+                value: 0,
+                start,
+                end,
+            }
+        })
+
+        let overflowCount = 0
+
+        prices.forEach(price => {
+            if (price > visibleMax) {
+                overflowCount += 1
+                return
+            }
+
+            const bucketIndex = Math.min(Math.floor((price - minPrice) / step), buckets.length - 1)
+            buckets[bucketIndex].value += 1
+        })
+
+        const histogramRows = buckets.filter(bucket => bucket.value > 0)
+
+        if (overflowCount > 0) {
+            histogramRows.push({
+                label: `>= ${formatCompactCurrency(visibleMax + 1)}`,
+                value: overflowCount,
+                start: visibleMax + 1,
+                end: maxPrice,
+                isOverflow: true,
+            })
+        }
+
+        return histogramRows
+    }
+
+    const bucketCount = Math.min(10, Math.max(5, Math.round(Math.sqrt(prices.length))))
+    const step = Math.max(1, Math.ceil((maxPrice - minPrice + 1) / bucketCount))
+    const buckets = Array.from({ length: bucketCount }, (_, index) => {
+        const start = minPrice + (index * step)
+        const end = index === bucketCount - 1 ? maxPrice : Math.min(maxPrice, start + step - 1)
+
+        return {
+            label: `${formatCompactCurrency(start)} - ${formatCompactCurrency(end)}`,
+            value: 0,
+            start,
+            end,
+        }
+    })
+
+    prices.forEach(price => {
+        const bucketIndex = Math.min(Math.floor((price - minPrice) / step), buckets.length - 1)
+        buckets[bucketIndex].value += 1
+    })
+
+    return buckets.filter(bucket => bucket.value > 0)
+}
+
+function createHorizontalBarChart(key, canvasId, rows, labelField, valueField, datasetLabel, color, options = {}) {
+    destroyChart(key)
+
+    const canvas = document.getElementById(canvasId)
+    if (!canvas || !rows.length) {
+        return
+    }
+
+    const { logarithmic = false } = options
+
+    state.charts[key] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: rows.map(row => shortenLabel(row[labelField])),
+            datasets: [{
+                label: datasetLabel,
+                data: rows.map(row => toNumber(row[valueField])),
+                backgroundColor: color,
+                borderRadius: 12,
+                borderSkipped: false,
+                maxBarThickness: 28,
+            }],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: logarithmic ? 'logarithmic' : 'linear',
+                    beginAtZero: !logarithmic,
+                    min: logarithmic ? 1 : undefined,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.14)',
+                    },
+                    ticks: {
+                        maxTicksLimit: logarithmic ? 6 : 8,
+                        callback(value) {
+                            return formatNumber(value)
+                        },
+                    },
+                },
+                y: {
+                    grid: {
+                        display: false,
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        title(context) {
+                            const row = rows[context[0].dataIndex]
+                            return row ? String(row[labelField] || '-') : context[0].label
+                        },
+                        label(context) {
+                            return `${datasetLabel}: ${formatNumber(context.raw)}`
+                        },
+                    },
+                },
+                shopeeValueLabel: {
+                    enabled: true,
+                    formatter: value => formatNumber(value),
+                },
+            },
+        },
+    })
+}
+
+function createPriceHistogramChart(key, canvasId, rows) {
+    destroyChart(key)
+
+    const canvas = document.getElementById(canvasId)
+    const histogramRows = buildPriceHistogramRows(rows)
+
+    if (!canvas || !histogramRows.length) {
+        return
+    }
+
+    const positiveValues = histogramRows.map(row => row.value).filter(value => value > 0)
+    const maxHistogramValue = Math.max(...positiveValues)
+    const minHistogramValue = Math.min(...positiveValues)
+    const useLogarithmicScale = maxHistogramValue / Math.max(1, minHistogramValue) >= 40
+
+    state.charts[key] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: histogramRows.map(row => row.label),
+            datasets: [{
+                label: 'Jumlah produk',
+                data: histogramRows.map(row => row.value),
+                backgroundColor: 'rgba(238, 77, 45, 0.82)',
+                borderColor: '#ee4d2d',
+                borderWidth: 1,
+                borderRadius: 8,
+                borderSkipped: false,
+                barPercentage: 1,
+                categoryPercentage: 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        minRotation: 0,
+                        color: '#5d6f62',
+                    },
+                },
+                y: {
+                    type: useLogarithmicScale ? 'logarithmic' : 'linear',
+                    beginAtZero: !useLogarithmicScale,
+                    min: useLogarithmicScale ? 1 : 0,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.14)',
+                    },
+                    ticks: {
+                        maxTicksLimit: useLogarithmicScale ? 6 : 8,
+                        callback(value) {
+                            return formatNumber(value)
+                        },
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        title(context) {
+                            const row = histogramRows[context[0].dataIndex]
+                            if (!row) {
+                                return context[0].label
+                            }
+
+                            if (row.isOverflow) {
+                                return `>= ${formatCurrency(row.start)}`
+                            }
+
+                            return `${formatCurrency(row.start)} - ${formatCurrency(row.end)}`
+                        },
+                        label(context) {
+                            return `Jumlah produk: ${formatNumber(context.raw)}`
+                        },
+                    },
+                },
+                shopeeValueLabel: {
+                    enabled: true,
+                    formatter: value => formatNumber(value),
+                    placement: 'inside-top',
+                },
+            },
+        },
+    })
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw new Error(`Gagal memuat ${url}`)
+    }
+    return response.json()
+}
+
+function uniqueSortedValues(rows, field) {
+    return Array.from(new Set(
+        rows
+            .map(row => String(row[field] || '').trim())
+            .filter(Boolean)
+    )).sort((left, right) => left.localeCompare(right, 'id'))
+}
+
+function summarizeFilterSelection(values) {
+    if (!values.size) {
+        return 'Semua'
+    }
+
+    if (values.size === 1) {
+        return Array.from(values)[0]
+    }
+
+    return `${values.size} dipilih`
+}
+
+function updateFilterLabels() {
+    setText('locationFilterLabel', summarizeFilterSelection(state.filters.locations))
+    setText('categoryFilterLabel', summarizeFilterSelection(state.filters.categories))
+}
+
+function populateFilterOptions(containerId, values, selectedValues) {
+    const container = document.getElementById(containerId)
+    if (!container) {
+        return
+    }
+
+    container.innerHTML = ''
+
+    values.forEach(value => {
+        const option = document.createElement('label')
+        option.className = 'filter-option'
+
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.value = value
+        input.checked = selectedValues.has(value)
+
+        const text = document.createElement('span')
+        text.textContent = value
+
+        option.appendChild(input)
+        option.appendChild(text)
+        container.appendChild(option)
+    })
+}
+
+function updateSummaryStats(rows) {
+    const totalProducts = rows.length
+    const stores = new Set(rows.map(row => String(row.toko || '').trim()).filter(Boolean))
+    const priceRows = rows.filter(row => toNumber(row.harga) > 0)
+    const averagePrice = priceRows.length
+        ? priceRows.reduce((sum, row) => sum + toNumber(row.harga), 0) / priceRows.length
+        : 0
+
+    const locationCounts = {}
+    rows.forEach(row => {
+        const lokasi = String(row.lokasi || 'Tidak diketahui').trim() || 'Tidak diketahui'
+        locationCounts[lokasi] = (locationCounts[lokasi] || 0) + 1
+    })
+
+    const topLocationEntry = Object.entries(locationCounts)
+        .sort((left, right) => right[1] - left[1])[0]
+
+    setText('totalProducts', formatNumber(totalProducts))
+    setText('totalStores', formatNumber(stores.size))
+    setText('averagePrice', formatCurrency(averagePrice))
+    setText('topLocation', topLocationEntry ? topLocationEntry[0] : '-')
+}
+
+function totalPages() {
+    return Math.max(1, Math.ceil(state.filteredRows.length / state.pageSize))
+}
+
+function updatePager() {
+    const pages = totalPages()
+    const currentPage = Math.min(state.currentPage, pages)
+    state.currentPage = currentPage
+
+    setText('pagerInfo', `Halaman ${currentPage} dari ${pages}`)
+    document.getElementById('firstPageButton').disabled = currentPage === 1
+    document.getElementById('prevPageButton').disabled = currentPage === 1
+    document.getElementById('nextPageButton').disabled = currentPage === pages
+    document.getElementById('lastPageButton').disabled = currentPage === pages
+}
+
+function renderTable() {
+    const tbody = document.getElementById('shopeeTableBody')
+    tbody.innerHTML = ''
+
+    if (!state.filteredRows.length) {
+        const row = document.createElement('tr')
+        const cell = document.createElement('td')
+        cell.colSpan = 8
+        cell.className = 'empty-state'
+        cell.textContent = 'Belum ada data Shopee yang sesuai dengan filter.'
+        row.appendChild(cell)
+        tbody.appendChild(row)
+        updatePager()
+        return
+    }
+
+    const startIndex = (state.currentPage - 1) * state.pageSize
+    const endIndex = startIndex + state.pageSize
+    const rows = state.filteredRows.slice(startIndex, endIndex)
+
+    rows.forEach((row, index) => {
+        const tableRow = document.createElement('tr')
+        const cells = [
+            startIndex + index + 1,
+            row.id || '-',
+            row.toko || '-',
+            row.produk || '-',
+            formatCurrency(row.harga),
+            row.lokasi || 'Tidak diketahui',
+            row.kategori || 'Tidak diketahui',
+        ]
+
+        cells.forEach(value => {
+            const cell = document.createElement('td')
+            cell.textContent = value
+            tableRow.appendChild(cell)
+        })
+
+        const linkCell = document.createElement('td')
+        if (row.url) {
+            const link = document.createElement('a')
+            link.href = row.url
+            link.target = '_blank'
+            link.rel = 'noopener noreferrer'
+            link.className = 'link-button'
+            link.textContent = 'Buka'
+            linkCell.appendChild(link)
+        } else {
+            linkCell.textContent = '-'
+        }
+
+        tableRow.appendChild(linkCell)
+        tbody.appendChild(tableRow)
+    })
+
+    updatePager()
+}
+
+function updateTableSummary() {
+    setText(
+        'tableSummary',
+        `${formatNumber(state.filteredRows.length)} dari ${formatNumber(state.allRows.length)} baris Shopee sedang ditampilkan.`
+    )
+}
+
+function toggleExportButtons(disabled) {
+    document.getElementById('exportExcelButton').disabled = disabled
+    document.getElementById('exportCsvButton').disabled = disabled
+    document.getElementById('exportJsonButton').disabled = disabled
+}
+
+function applyFilters() {
+    state.filteredRows = state.allRows.filter(row => {
+        const lokasi = String(row.lokasi || '').trim()
+        const kategori = String(row.kategori || '').trim()
+        const matchesLocation = !state.filters.locations.size || state.filters.locations.has(lokasi)
+        const matchesCategory = !state.filters.categories.size || state.filters.categories.has(kategori)
+        return matchesLocation && matchesCategory
+    })
+
+    state.currentPage = 1
+    updateFilterLabels()
+    updateSummaryStats(state.filteredRows)
+    renderCharts(state.filteredRows)
+    renderTable()
+    updateTableSummary()
+    toggleExportButtons(!state.filteredRows.length)
+}
+
+function goToPage(pageNumber) {
+    const safePage = Math.min(Math.max(pageNumber, 1), totalPages())
+    state.currentPage = safePage
+    renderTable()
+}
+
+function downloadBlob(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
+}
+
+function exportJson() {
+    if (!state.filteredRows.length) {
+        return
+    }
+
+    const jsonContent = JSON.stringify(state.filteredRows, null, 2)
+    downloadBlob(jsonContent, 'shopee_sulteng.json', 'application/json;charset=utf-8')
+}
+
+function exportCsv() {
+    if (!state.filteredRows.length) {
+        return
+    }
+
+    const headers = ['id', 'toko', 'produk', 'harga', 'lokasi', 'kategori', 'url']
+    const escapeValue = value => `"${String(value ?? '').replaceAll('"', '""')}"`
+
+    const csvRows = [
+        headers.join(','),
+        ...state.filteredRows.map(row => headers.map(header => escapeValue(row[header])).join(',')),
+    ]
+
+    downloadBlob(csvRows.join('\n'), 'shopee_sulteng.csv', 'text/csv;charset=utf-8')
+}
+
+function exportExcel() {
+    if (!state.filteredRows.length) {
+        return
+    }
+
+    const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(state.filteredRows)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Shopee')
+    XLSX.writeFile(workbook, 'shopee_sulteng.xlsx')
+}
+
+function bindControls() {
+    document.getElementById('locationFilterOptions').addEventListener('change', () => {
+        const selected = Array.from(document.querySelectorAll('#locationFilterOptions input:checked'))
+            .map(input => input.value)
+        state.filters.locations = new Set(selected)
+        applyFilters()
+    })
+
+    document.getElementById('categoryFilterOptions').addEventListener('change', () => {
+        const selected = Array.from(document.querySelectorAll('#categoryFilterOptions input:checked'))
+            .map(input => input.value)
+        state.filters.categories = new Set(selected)
+        applyFilters()
+    })
+
+    document.getElementById('resetFilterButton').addEventListener('click', () => {
+        state.filters.locations = new Set()
+        state.filters.categories = new Set()
+        document.querySelectorAll('#locationFilterOptions input, #categoryFilterOptions input').forEach(input => {
+            input.checked = false
+        })
+        applyFilters()
+    })
+
+    document.getElementById('firstPageButton').addEventListener('click', () => goToPage(1))
+    document.getElementById('prevPageButton').addEventListener('click', () => goToPage(state.currentPage - 1))
+    document.getElementById('nextPageButton').addEventListener('click', () => goToPage(state.currentPage + 1))
+    document.getElementById('lastPageButton').addEventListener('click', () => goToPage(totalPages()))
+
+    document.getElementById('exportExcelButton').addEventListener('click', exportExcel)
+    document.getElementById('exportCsvButton').addEventListener('click', exportCsv)
+    document.getElementById('exportJsonButton').addEventListener('click', exportJson)
+}
+
+function renderCharts(rows) {
+    createHorizontalBarChart(
+        'category',
+        'categoryChart',
+        buildCountRows(rows, 'kategori'),
+        'label',
+        'value',
+        'Jumlah produk',
+        '#ee4d2d'
+    )
+
+    createPriceHistogramChart(
+        'price',
+        'priceChart',
+        rows
+    )
+
+    createHorizontalBarChart(
+        'productLocation',
+        'productLocationChart',
+        buildCountRows(rows, 'lokasi', 10),
+        'label',
+        'value',
+        'Jumlah produk',
+        '#fb923c',
+        { logarithmic: true }
+    )
+
+    createHorizontalBarChart(
+        'storeLocation',
+        'storeLocationChart',
+        buildStoreLocationRows(rows, 10),
+        'label',
+        'value',
+        'Jumlah toko',
+        '#f97316',
+        { logarithmic: true }
+    )
+}
+
+async function initializeShopeePage() {
+    syncHeaderState()
+    window.addEventListener('scroll', syncHeaderState, { passive: true })
+    bindControls()
+    setTableStatus('Memuat data Shopee...', false)
+    toggleExportButtons(true)
+    setLoadingMessage(
+        'Sedang memuat dashboard Shopee',
+        'Menyiapkan kartu ringkasan, chart, dan tabel produk Shopee.'
+    )
+    const loadingFallbackTimer = window.setTimeout(() => {
+        document.body.classList.add('ready')
+    }, 800)
+
+    try {
+        const tableRows = await fetchJson('/api/shopee/tabel/')
+
+        state.allRows = Array.isArray(tableRows) ? tableRows : []
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('ready')
+        await waitForNextPaint()
+        populateFilterOptions('locationFilterOptions', uniqueSortedValues(state.allRows, 'lokasi'), state.filters.locations)
+        populateFilterOptions('categoryFilterOptions', uniqueSortedValues(state.allRows, 'kategori'), state.filters.categories)
+        applyFilters()
+        setTableStatus('Data Shopee berhasil dimuat.', false)
+        toggleExportButtons(!state.filteredRows.length)
+    } catch (error) {
+        console.error(error)
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('ready')
+        setLoadingMessage(
+            'Gagal memuat dashboard Shopee',
+            'Terjadi kendala saat mengambil data Shopee. Silakan muat ulang halaman.'
+        )
+        setTableStatus('Gagal memuat data Shopee. Silakan muat ulang halaman.', true)
+    }
+}
+
+window.addEventListener('DOMContentLoaded', initializeShopeePage)
+</script>
+</body>
+</html>

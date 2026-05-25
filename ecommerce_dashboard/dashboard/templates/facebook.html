@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Facebook Sulawesi Tengah</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #eef3f9;
+            --bg-accent: #dce7f4;
+            --panel: rgba(255, 255, 255, 0.94);
+            --panel-strong: #ffffff;
+            --text: #142235;
+            --muted: #5f7085;
+            --line: rgba(148, 163, 184, 0.18);
+            --shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            --blue: #2563eb;
+            --blue-soft: #bfd8fb;
+            --teal: #0f766e;
+            --mint: #8ce9d5;
+            --surface-blue: rgba(37, 99, 235, 0.10);
+            --surface-teal: rgba(15, 118, 110, 0.10);
+            --surface-slate: rgba(71, 85, 105, 0.08);
+            --sidebar-width: 96px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 28%),
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 24%),
+                linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .reveal-item {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease,
+                background 0.28s ease;
+            transition-delay: var(--reveal-delay, 0ms);
+            will-change: opacity, transform;
+        }
+
+        body:not(.facebook-ready) .reveal-item {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        body.facebook-ready .reveal-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .app-shell {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+            z-index: 140;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: rgba(226, 232, 240, 0.78);
+            text-align: center;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            background: rgba(148, 163, 184, 0.12);
+            color: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            color: #ffffff;
+            box-shadow:
+                inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+                0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(148, 163, 184, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .nav-icon-grabfood {
+            background: linear-gradient(135deg, rgba(0, 177, 79, 0.34), rgba(0, 122, 61, 0.26));
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-facebook {
+            background: linear-gradient(135deg, rgba(24, 119, 242, 0.32), rgba(37, 99, 235, 0.22));
+        }
+
+        .nav-icon-facebook svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-icon-tokopedia {
+            background: linear-gradient(135deg, rgba(3, 172, 14, 0.28), rgba(15, 118, 110, 0.20));
+        }
+
+        .nav-icon-tokopedia svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-shopee {
+            background: linear-gradient(135deg, rgba(238, 77, 45, 0.32), rgba(249, 115, 22, 0.24));
+        }
+
+        .nav-icon-shopee svg {
+            width: 24px;
+            height: 24px;
+        }
+        .nav-icon-lazada {
+            background: linear-gradient(135deg, rgba(26, 46, 138, 0.32), rgba(245, 114, 36, 0.24));
+        }
+
+        .nav-icon-lazada svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-blibli {
+            background: linear-gradient(135deg, rgba(0, 168, 232, 0.30), rgba(0, 114, 206, 0.22));
+        }
+
+        .nav-icon-blibli svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-icon-facebook,
+        .nav-icon-tokopedia,
+        .nav-icon-shopee,
+        .nav-icon-lazada,
+        .nav-icon-blibli {
+            background-color: transparent;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 72%;
+            box-shadow: none;
+            overflow: hidden;
+        }
+
+
+        .nav-icon-facebook {
+            background-image: url('/static/dashboard/images/facebook.png');
+            background-size: 76%;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .nav-icon-tokopedia {
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-shopee {
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 78%;
+        }
+
+        .nav-icon-lazada {
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 82%;
+        }
+
+        .nav-icon-blibli {
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-facebook svg,
+        .nav-icon-tokopedia svg,
+        .nav-icon-shopee svg,
+        .nav-icon-lazada svg,
+        .nav-icon-blibli svg {
+            display: none;
+        }
+        .main-stage {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            z-index: 120;
+            background: rgba(248, 251, 255, 0.84);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+            transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .site-header.is-compact {
+            background: rgba(248, 251, 255, 0.70);
+            border-color: rgba(203, 213, 225, 0.78);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .site-header-inner {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 16px 0 14px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: start;
+            transition: padding 0.28s ease;
+        }
+
+        .site-header.is-compact .site-header-inner {
+            padding: 10px 0;
+        }
+
+        .page-shell {
+            width: min(1160px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 152px 0 42px;
+        }
+
+        .page-heading {
+            display: grid;
+            gap: 4px;
+            max-height: 120px;
+            opacity: 1;
+            transform: translateY(0);
+            overflow: hidden;
+            transition: opacity 0.24s ease, transform 0.24s ease, max-height 0.24s ease;
+        }
+
+        .site-header.is-compact .page-heading {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            line-height: 1.05;
+        }
+
+        .page-subtitle {
+            margin: 0;
+            font-size: clamp(1rem, 1.4vw, 1.18rem);
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--muted);
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-card {
+            padding: 12px 18px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+            transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .nav-card.active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: #eff6ff;
+            box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
+        }
+
+        .site-header.is-compact .nav-card,
+        .site-header.is-compact .nav-card:hover {
+            background: rgba(255, 255, 255, 0.90);
+            border-color: rgba(226, 232, 240, 0.92);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .site-header.is-compact .nav-card.active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: #eff6ff;
+            border-color: transparent;
+            box-shadow: 0 16px 30px rgba(37, 99, 235, 0.20);
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(241, 245, 249, 0.76);
+            z-index: 999;
+            transition: opacity 0.34s ease, visibility 0.34s ease;
+        }
+
+        body.facebook-ready #loading {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-card {
+            min-width: min(360px, calc(100vw - 40px));
+            padding: 28px 30px;
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95));
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 28px 64px rgba(15, 23, 42, 0.12);
+            display: grid;
+            justify-items: center;
+            gap: 14px;
+            text-align: center;
+            backdrop-filter: blur(14px);
+        }
+
+        .loading-spinner {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 4px solid rgba(37, 99, 235, 0.14);
+            border-top-color: var(--blue);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-title {
+            margin: 0;
+            font-size: 1.12rem;
+            font-weight: 700;
+        }
+
+        .loading-subtitle {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .stat-card,
+        .panel,
+        .source-card {
+            position: relative;
+            z-index: 1;
+            isolation: isolate;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .stat-card {
+            padding: 20px 22px;
+            border-radius: 22px;
+            min-height: 128px;
+            overflow: hidden;
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -18px -24px auto;
+            width: 116px;
+            height: 116px;
+            border-radius: 50%;
+            background: var(--card-glow, rgba(37, 99, 235, 0.12));
+            filter: blur(10px);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .stat-card:hover,
+        .stat-card:focus-within {
+            z-index: 6;
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: 0 26px 54px rgba(15, 23, 42, 0.12);
+        }
+
+        .stat-card-blue {
+            --card-glow: rgba(37, 99, 235, 0.14);
+        }
+
+        .stat-card-teal {
+            --card-glow: rgba(15, 118, 110, 0.14);
+        }
+
+        .stat-label {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding-right: 32px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #5b6d81;
+        }
+
+        .stat-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex: none;
+        }
+
+        .stat-dot-blue {
+            background: var(--blue);
+        }
+
+        .stat-dot-teal {
+            background: var(--teal);
+        }
+
+        .stat-value {
+            position: relative;
+            z-index: 1;
+            margin: 18px 0 8px;
+            font-size: clamp(2rem, 2.7vw, 3rem);
+            line-height: 1;
+        }
+
+        .stat-caption {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+
+        .panel {
+            padding: 24px;
+            border-radius: 28px;
+            margin-bottom: 22px;
+            overflow: visible;
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+        }
+
+        .panel:hover,
+        .panel:focus-within {
+            z-index: 6;
+            transform: translateY(-3px);
+            border-color: rgba(37, 99, 235, 0.12);
+            box-shadow: 0 26px 54px rgba(15, 23, 42, 0.12);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+            padding-right: 38px;
+        }
+
+        .panel-title-group {
+            min-width: 0;
+            display: grid;
+            gap: 6px;
+        }
+
+        .panel-title-group h3 {
+            margin: 0;
+            font-size: 1.34rem;
+            line-height: 1.2;
+        }
+
+        .panel-kicker {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.94));
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--blue);
+        }
+
+        .panel-kicker-teal {
+            color: var(--teal);
+        }
+
+        .panel-description {
+            margin: 0;
+            max-width: 420px;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: 0.98rem;
+        }
+
+        .info-chip {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 20;
+        }
+
+        .info-chip:hover,
+        .info-chip:focus-within {
+            z-index: 120;
+        }
+
+        .info-button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--muted);
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .info-tooltip {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: min(280px, calc(100vw - 48px));
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.18);
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+            z-index: 121;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .info-chip:hover .info-tooltip,
+        .info-chip:focus-within .info-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .info-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .chart-box {
+            position: relative;
+            min-height: 280px;
+            padding: 8px 0;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(241, 245, 249, 0.94));
+            border: 1px solid rgba(203, 213, 225, 0.92);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 12px 24px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.24s ease, box-shadow 0.24s ease, background 0.24s ease;
+        }
+
+        .panel:hover .chart-box {
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 16px 30px rgba(15, 23, 42, 0.07);
+        }
+
+        .chart-box-donut {
+            height: 320px;
+            min-height: 320px;
+            padding: 12px;
+        }
+
+        .chart-box-compare {
+            height: 270px;
+            min-height: 270px;
+            padding: 12px 10px 10px;
+        }
+
+        .chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .legend-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 16px;
+            background: rgba(244, 247, 251, 0.94);
+            border: 1px solid rgba(226, 232, 240, 0.92);
+        }
+
+        .legend-swatch {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            flex: none;
+        }
+
+        .legend-copy {
+            display: grid;
+            gap: 2px;
+        }
+
+        .legend-label {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .legend-value {
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .source-card {
+            padding: 22px;
+            border-radius: 22px;
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+        }
+
+        .source-card:hover,
+        .source-card:focus-within {
+            transform: translateY(-3px);
+            box-shadow: 0 26px 54px rgba(15, 23, 42, 0.10);
+        }
+
+        .source-card-blue {
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.10);
+        }
+
+        .source-card-teal {
+            box-shadow: 0 18px 40px rgba(15, 118, 110, 0.10);
+        }
+
+        .source-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+        }
+
+        .source-kicker-blue {
+            color: var(--blue);
+        }
+
+        .source-kicker-teal {
+            color: var(--teal);
+        }
+
+        .source-title {
+            margin: 0 0 10px;
+            font-size: 1.08rem;
+        }
+
+        .source-text,
+        .source-note {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .source-note {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(226, 232, 240, 0.92);
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 1080px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .section-grid,
+            .source-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-header {
+                flex-direction: column;
+            }
+
+            .panel-description {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 980px) {
+            :root {
+                --sidebar-width: 100%;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                width: 100%;
+                bottom: auto;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: column;
+                gap: 10px;
+            }
+
+            .nav-item {
+                min-width: 84px;
+                min-height: auto;
+                padding: 10px 8px;
+            }
+
+            .nav-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
+            }
+
+            .site-header {
+                top: 88px;
+                left: 0;
+            }
+
+            .main-stage {
+                margin-left: 0;
+            }
+
+            .page-shell {
+                padding-top: 282px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: row;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .site-header {
+                top: 152px;
+            }
+
+            .site-header-inner,
+            .page-shell {
+                width: min(100% - 28px, 100%);
+            }
+
+            .page-shell {
+                padding-top: 352px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-container {
+                justify-content: flex-start;
+            }
+
+            .nav-card {
+                flex: 1 1 calc(50% - 12px);
+                text-align: center;
+            }
+
+            .panel,
+            .stat-card,
+            .source-card,
+            .loading-card {
+                border-radius: 22px;
+            }
+
+            .chart-box {
+                min-height: 240px;
+            }
+
+            .chart-box-donut {
+                height: 280px;
+                min-height: 280px;
+            }
+
+            .chart-box-compare {
+                height: 240px;
+                min-height: 240px;
+            }
+
+            .legend-list {
+                justify-content: flex-start;
+            }
+
+            .info-tooltip {
+                right: -6px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal-item,
+            .nav-card,
+            .stat-card,
+            .panel,
+            .chart-box {
+                transition: none !important;
+            }
+
+            .nav-card:hover,
+            .stat-card:hover,
+            .panel:hover {
+                transform: none;
+            }
+        }
+    
+        /* Sidebar safety: keep the final GrabFood item visible on short screens. */
+        .sidebar {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .sidebar-nav {
+            padding-bottom: 14px;
+        }
+
+        .nav-item {
+            min-height: 68px; /* keep 7 sidebar items visible */
+        }
+
+        .nav-icon-grabfood {
+            background: rgba(0, 177, 79, 0.16);
+        }
+    
+        .nav-item {
+            min-height: 64px;
+            padding: 7px 5px;
+            gap: 5px;
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+        }
+    
+
+        /* Professional sidebar logo treatment shared across dashboard pages. */
+        .sidebar .nav-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.94);
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.30);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.90),
+                0 10px 20px rgba(2, 6, 23, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover .nav-icon,
+        .sidebar .nav-item.active .nav-icon {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 14px 24px rgba(2, 6, 23, 0.28),
+                0 0 0 4px rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .nav-icon-menu {
+            color: #f8fafc;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(15, 118, 110, 0.26)),
+                rgba(15, 23, 42, 0.56);
+        }
+
+        .sidebar .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.22));
+        }
+
+        .sidebar .nav-icon-facebook {
+            background-color: #ffffff;
+            background-image: none;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .nav-icon-facebook .sidebar-logo {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sidebar .nav-icon-tokopedia {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-shopee {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 76%;
+        }
+
+        .sidebar .nav-icon-lazada {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 78%;
+        }
+
+        .sidebar .nav-icon-blibli {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-grabfood {
+            background: #ffffff;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .sidebar-logo {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .sidebar .nav-icon-grabfood .sidebar-logo {
+            width: 31px;
+            height: 31px;
+        }
+
+        .sidebar .nav-label {
+            letter-spacing: 0.02em;
+        }
+
+
+        /* Keep page titles restrained and subtitles light across dashboards. */
+        .page-title,
+        .hero h1,
+        h1 {
+            font-size: clamp(1.55rem, 2vw, 2.05rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle,
+        .hero p,
+        .subtitle {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: 0;
+        }
+
+
+        /* Tighten the spacing between page subtitles and filter controls. */
+        .site-header-inner {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        .page-heading {
+            gap: 2px;
+        }
+
+        .page-shell {
+            gap: 16px;
+        }
+
+        .filter-toolbar,
+        .filter-panel {
+            margin-top: 0;
+        }
+
+        .hero {
+            gap: 6px;
+        }
+
+        @media (min-width: 981px) {
+            .page-shell {
+                padding-top: 112px;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .page-shell {
+                padding-top: 232px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding-top: 202px;
+            }
+        }
+
+
+        /* BPS copyright footer shared across dashboard pages. */
+        .copyright-footer {
+            width: min(100% - 48px, 1320px);
+            margin: 24px auto 0;
+            padding: 14px 0 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.24);
+            color: var(--muted, #64748b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .copyright-footer {
+                width: min(100% - 28px, 100%);
+                margin-top: 18px;
+                padding-top: 12px;
+            }
+        }
+</style>
+</head>
+<body>
+<header id="siteHeader" class="site-header">
+    <div class="site-header-inner">
+        <div class="page-heading">
+            <h1 class="page-title">Dashboard Facebook Sulawesi Tengah</h1>
+            <p class="page-subtitle">Analisis sebaran akun Facebook Marketplace dan grup komunitas berdasarkan status pedagang, kategori, dan kabupaten/kota.</p>
+        </div>
+
+        <nav class="nav-container">
+            <a href="/facebook/" class="nav-card active">Overview</a>
+            <a href="/ecommerce/" class="nav-card">Marketplace</a>
+            <a href="/komunitas/" class="nav-card">Komunitas</a>
+        </nav>
+    </div>
+</header>
+
+<div id="loading" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loadingTitle" class="loading-title">Sedang memuat overview Facebook</p>
+        <p id="loadingSubtitle" class="loading-subtitle">Menyiapkan ringkasan marketplace, komunitas, dan perbandingan Kota Palu.</p>
+    </div>
+</div>
+
+<div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi dashboard">
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item" aria-label="Dashboard utama">
+                <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                        <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Ringkasan</span>
+            </a>
+
+            <a href="/facebook/" class="nav-item active" aria-current="page" aria-label="Overview Facebook">
+                <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+                <span class="nav-label">Facebook</span>
+            </a>
+
+            <a href="/tokopedia/" class="nav-item" aria-label="Dashboard Tokopedia">
+                <span class="nav-icon nav-icon-tokopedia" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.1 6.9L9.3 8H14.7L16.9 6.9L19 8.8L18.4 14.3C18.1 17.4 15.5 19.8 12.4 19.8H11.6C8.5 19.8 5.9 17.4 5.6 14.3L5 8.8L7.1 6.9Z" fill="#ffffff"/>
+                        <circle cx="9.6" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="14.4" cy="12.2" r="2.1" fill="#03AC0E"/>
+                        <circle cx="9.6" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <circle cx="14.4" cy="12.2" r="0.82" fill="#0F172A"/>
+                        <path d="M10.8 15.8H13.2L12 17.2L10.8 15.8Z" fill="#F59E0B"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Tokopedia</span>
+            </a>
+
+            <a href="/shopee/" class="nav-item" aria-label="Dashboard Shopee">
+                <span class="nav-icon nav-icon-shopee" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 8.3V7.8C8 5.7 9.7 4 11.8 4H12.2C14.3 4 16 5.7 16 7.8V8.3" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M6.2 8.6H17.8L16.9 17.9C16.8 18.9 16 19.7 15 19.7H9C8 19.7 7.2 18.9 7.1 17.9L6.2 8.6Z" fill="#ffffff"/>
+                        <path d="M14.4 10.3C13.9 10.1 13.4 10 12.8 10C11.4 10 10.4 10.7 10.4 11.9C10.4 12.8 11 13.4 12.1 14L12.8 14.4C13.3 14.7 13.5 15 13.5 15.4C13.5 15.9 13.1 16.3 12.2 16.3C11.4 16.3 10.6 16 9.8 15.4V17.2C10.5 17.6 11.3 17.8 12.1 17.8C13.4 17.8 14.4 17 14.4 15.8C14.4 14.9 13.8 14.2 12.7 13.6L12.1 13.3C11.5 12.9 11.3 12.7 11.3 12.2C11.3 11.7 11.7 11.4 12.4 11.4C13.1 11.4 13.7 11.6 14.4 12.1V10.3Z" fill="#EE4D2D"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Shopee</span>
+            </a>
+            <a href="/lazada/" class="nav-item" aria-label="Dashboard Lazada">
+                <span class="nav-icon nav-icon-lazada" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4.2L19 8.1V15.9L12 19.8L5 15.9V8.1L12 4.2Z" fill="#ffffff"/>
+                        <path d="M8.3 9.4L12 7.3L15.7 9.4V14.6L12 16.7L8.3 14.6V9.4Z" fill="#1A2E8A"/>
+                        <path d="M9.6 9.7L12 11.1L14.4 9.7L15.5 11.5L12 14.6L8.5 11.5L9.6 9.7Z" fill="#F57224"/>
+                        <path d="M8.5 11.5L12 14.6L15.5 11.5V14.4L12 16.4L8.5 14.4V11.5Z" fill="#E0006D" fill-opacity="0.88"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Lazada</span>
+            </a>
+
+            <a href="/blibli/" class="nav-item" aria-label="Dashboard Blibli">
+                <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+                <span class="nav-label">Blibli</span>
+            </a>
+            <a href="/grabfood/" class="nav-item" aria-label="Dashboard GrabFood">
+                <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+                <span class="nav-label">GrabFood</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-stage">
+<div class="page-shell">
+    <section class="stats-grid" aria-label="Ringkasan KPI Facebook">
+        <article class="stat-card stat-card-blue reveal-item" style="--reveal-delay: 60ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan jumlah marketplace">i</button>
+                <div class="info-tooltip" role="tooltip">Jumlah seluruh data valid yang terdeteksi pada Facebook Marketplace.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-blue"></span>
+                Jumlah Marketplace
+            </span>
+            <h2 id="marketplaceTotal" class="stat-value">0</h2>
+            <p class="stat-caption">Data valid marketplace</p>
+        </article>
+
+        <article class="stat-card stat-card-blue reveal-item" style="--reveal-delay: 120ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan pelaku usaha marketplace">i</button>
+                <div class="info-tooltip" role="tooltip">Akun marketplace yang teridentifikasi sebagai pelaku usaha.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-blue"></span>
+                Pelaku Usaha Marketplace
+            </span>
+            <h2 id="marketplaceSeller" class="stat-value">0</h2>
+            <p class="stat-caption">Status pelaku usaha</p>
+        </article>
+
+        <article class="stat-card stat-card-teal reveal-item" style="--reveal-delay: 180ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan jumlah akun komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Jumlah seluruh akun unik yang tercatat pada grup komunitas Facebook.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-teal"></span>
+                Jumlah Akun Komunitas
+            </span>
+            <h2 id="communityTotal" class="stat-value">0</h2>
+            <p class="stat-caption">Akun unik komunitas</p>
+        </article>
+
+        <article class="stat-card stat-card-teal reveal-item" style="--reveal-delay: 240ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan pelaku usaha komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Akun komunitas yang teridentifikasi sebagai pelaku usaha.</div>
+            </div>
+            <span class="stat-label">
+                <span class="stat-dot stat-dot-teal"></span>
+                Pelaku Usaha Komunitas
+            </span>
+            <h2 id="communitySeller" class="stat-value">0</h2>
+            <p class="stat-caption">Aktivitas perdagangan</p>
+        </article>
+    </section>
+
+    <section class="section-grid" aria-label="Komposisi akun">
+        <article class="panel reveal-item" style="--reveal-delay: 320ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan komposisi akun marketplace">i</button>
+                <div class="info-tooltip" role="tooltip">Proporsi pelaku usaha dan bukan pelaku usaha pada Facebook Marketplace.</div>
+            </div>
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3>Komposisi Akun Marketplace</h3>
+                    <span class="panel-kicker">Marketplace</span>
+                </div>
+            </div>
+            <div class="chart-box chart-box-donut">
+                <canvas id="marketplaceCompositionChart"></canvas>
+            </div>
+            <div id="marketplaceLegend" class="legend-list" aria-label="Ringkasan komposisi marketplace"></div>
+        </article>
+
+        <article class="panel reveal-item" style="--reveal-delay: 380ms;">
+            <div class="info-chip">
+                <button class="info-button" type="button" aria-label="Penjelasan komposisi akun komunitas">i</button>
+                <div class="info-tooltip" role="tooltip">Proporsi akun bukan pelaku usaha dan pelaku usaha pada komunitas Facebook.</div>
+            </div>
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3>Komposisi Akun Komunitas</h3>
+                    <span class="panel-kicker panel-kicker-teal">Komunitas</span>
+                </div>
+            </div>
+            <div class="chart-box chart-box-donut">
+                <canvas id="communityCompositionChart"></canvas>
+            </div>
+            <div id="communityLegend" class="legend-list" aria-label="Ringkasan komposisi komunitas"></div>
+        </article>
+    </section>
+
+    <section class="panel reveal-item" style="--reveal-delay: 440ms;" aria-label="Perbandingan pelaku usaha di Kota Palu">
+        <div class="info-chip">
+            <button class="info-button" type="button" aria-label="Penjelasan perbandingan pelaku usaha di Kota Palu">i</button>
+            <div class="info-tooltip" role="tooltip">Perbandingan jumlah pelaku usaha pada Facebook Marketplace Kota Palu dan komunitas Facebook di Kota Palu.</div>
+        </div>
+        <div class="panel-header">
+            <div class="panel-title-group">
+                <h3>Jumlah Pelaku Usaha di Kota Palu</h3>
+                <span class="panel-kicker">Perbandingan</span>
+            </div>
+        </div>
+        <div class="chart-box chart-box-compare">
+            <canvas id="paluComparisonChart"></canvas>
+        </div>
+    </section>
+
+    <section class="panel reveal-item" style="--reveal-delay: 500ms;" aria-label="Sumber data">
+        <div class="panel-header">
+            <div class="panel-title-group">
+                <h3>Sumber Data</h3>
+                <span class="panel-kicker">Dokumentasi Data</span>
+            </div>
+        </div>
+        <div class="source-grid">
+            <article class="source-card source-card-blue reveal-item" style="--reveal-delay: 560ms;">
+                <span class="source-kicker source-kicker-blue">Marketplace</span>
+                <h4 class="source-title">Facebook Marketplace</h4>
+                <p class="source-text">Data marketplace berasal dari aktivitas akun pada Facebook Marketplace di wilayah Sulawesi Tengah.</p>
+                <p class="source-note">Cakupan akun marketplace dan identifikasi pelaku usaha.</p>
+            </article>
+
+            <article class="source-card source-card-teal reveal-item" style="--reveal-delay: 620ms;">
+                <span class="source-kicker source-kicker-teal">Komunitas</span>
+                <h4 class="source-title">Grup Komunitas Facebook</h4>
+                <p class="source-text">Data komunitas berasal dari 15 grup Facebook aktif di Kota Palu yang dianalisis untuk mengidentifikasi aktivitas pelaku usaha.</p>
+                <p class="source-note">Cakupan aktivitas akun komunitas dan klasifikasi pelaku usaha.</p>
+            </article>
+        </div>
+    </section>
+</div>
+        <footer class="copyright-footer" aria-label="Copyright">&copy; BPS SULTENG 2026</footer>
+</main>
+</div>
+
+<script>
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const state = {
+    charts: {},
+}
+
+const valueLabelPlugin = {
+    id: 'valueLabel',
+    afterDatasetsDraw(chart, args, pluginOptions) {
+        if (!pluginOptions || !pluginOptions.enabled) {
+            return
+        }
+
+        const formatter = typeof pluginOptions.formatter === 'function'
+            ? pluginOptions.formatter
+            : value => String(value)
+
+        const { ctx } = chart
+        ctx.save()
+        ctx.font = '600 12px "Segoe UI", sans-serif'
+        ctx.fillStyle = '#ffffff'
+        ctx.textAlign = 'right'
+        ctx.textBaseline = 'middle'
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex)
+            meta.data.forEach((element, index) => {
+                const value = Number(dataset.data[index]) || 0
+                if (!value) {
+                    return
+                }
+
+                const position = element.tooltipPosition()
+                ctx.fillText(formatter(value), position.x - 14, position.y)
+            })
+        })
+
+        ctx.restore()
+    },
+}
+
+function toNumber(value) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+function formatNumber(value) {
+    return toNumber(value).toLocaleString('id-ID')
+}
+
+function formatPercent(value, total) {
+    if (!total) {
+        return '0%'
+    }
+
+    return `${Math.round((toNumber(value) / total) * 100)}%`
+}
+
+function drawDoughnutCallout(ctx, chart, arc, color, percentageLabel, valueLabel) {
+    const angle = (arc.startAngle + arc.endAngle) / 2
+    const isRight = Math.cos(angle) >= 0
+    const startRadius = arc.outerRadius + 4
+    const elbowRadius = arc.outerRadius + 20
+    const startX = arc.x + (Math.cos(angle) * startRadius)
+    const startY = arc.y + (Math.sin(angle) * startRadius)
+    const elbowX = arc.x + (Math.cos(angle) * elbowRadius)
+    const elbowY = arc.y + (Math.sin(angle) * elbowRadius)
+    const lineEndX = isRight
+        ? Math.min(chart.width - 58, elbowX + 28)
+        : Math.max(58, elbowX - 28)
+    const textX = isRight ? lineEndX + 8 : lineEndX - 8
+
+    ctx.save()
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.9)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    ctx.lineTo(elbowX, elbowY)
+    ctx.lineTo(lineEndX, elbowY)
+    ctx.stroke()
+
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.arc(startX, startY, 3.5, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.textAlign = isRight ? 'left' : 'right'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = '#142235'
+    ctx.font = '700 11px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+    ctx.fillText(percentageLabel, textX, elbowY - 6)
+    ctx.fillStyle = '#64748b'
+    ctx.font = '600 9px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+    ctx.fillText(valueLabel, textX, elbowY + 8)
+    ctx.restore()
+}
+
+const doughnutCalloutPlugin = {
+    id: 'doughnutCalloutPlugin',
+    afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'doughnut') {
+            return
+        }
+
+        const dataset = chart.data.datasets[0]
+        const meta = chart.getDatasetMeta(0)
+        if (!dataset || !meta?.data?.length) {
+            return
+        }
+
+        const total = dataset.data.reduce((sum, item) => sum + toNumber(item), 0)
+        const { ctx } = chart
+        ctx.save()
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        meta.data.forEach((arc, index) => {
+            const value = toNumber(dataset.data[index])
+            if (value <= 0) {
+                return
+            }
+
+            const percentageLabel = formatPercent(value, total)
+            const valueLabel = formatNumber(value)
+            const color = Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor[index] : '#2563eb'
+            drawDoughnutCallout(ctx, chart, arc, color, percentageLabel, valueLabel)
+        })
+
+        ctx.restore()
+    },
+}
+
+Chart.register(valueLabelPlugin, doughnutCalloutPlugin)
+
+function setText(id, value) {
+    const element = document.getElementById(id)
+    if (element) {
+        setElementText(element, value)
+    }
+}
+
+function parseDisplayNumber(value) {
+    const text = String(value ?? '').trim()
+    if (!text || text === '-') return null
+    const numericText = text.replace(/[^\d,.-]/g, '')
+    if (!numericText || numericText === '-' || numericText === ',') return null
+    const normalized = numericText.includes(',')
+        ? numericText.replace(/\./g, '').replace(',', '.')
+        : numericText.replace(/[.,]/g, '')
+    const number = Number(normalized)
+    return Number.isFinite(number) ? number : null
+}
+
+function formatAnimatedValue(template, value) {
+    const text = String(template ?? '')
+    const decimalMatch = text.match(/,(\d+)/)
+    const fractionDigits = decimalMatch ? decimalMatch[1].length : 0
+    const formattedNumber = value.toLocaleString('id-ID', {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+    })
+    if (/^Rp/i.test(text.trim())) return `Rp${formattedNumber}`
+    if (text.trim().endsWith('%')) return `${formattedNumber}%`
+    return formattedNumber
+}
+
+function shouldAnimateText(element, value) {
+    return element.classList.contains('stat-value') && parseDisplayNumber(value) !== null
+}
+
+function setElementText(element, value) {
+    if (!shouldAnimateText(element, value)) {
+        element.textContent = value
+        return
+    }
+    const target = parseDisplayNumber(value)
+    const start = parseDisplayNumber(element.textContent) ?? 0
+    const template = String(value)
+    if (element.dataset.animationFrame) {
+        cancelAnimationFrame(Number(element.dataset.animationFrame))
+    }
+    const duration = 900
+    const startedAt = performance.now()
+    const step = now => {
+        const progress = Math.min((now - startedAt) / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        element.textContent = formatAnimatedValue(template, start + ((target - start) * eased))
+        if (progress < 1) {
+            element.dataset.animationFrame = requestAnimationFrame(step)
+        } else {
+            element.textContent = template
+            delete element.dataset.animationFrame
+        }
+    }
+    element.dataset.animationFrame = requestAnimationFrame(step)
+}
+
+function setLoadingMessage(title, subtitle) {
+    setText('loadingTitle', title)
+    setText('loadingSubtitle', subtitle)
+}
+
+function waitForNextPaint() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+    })
+}
+
+function destroyChart(key) {
+    if (state.charts[key]) {
+        state.charts[key].destroy()
+        delete state.charts[key]
+    }
+}
+
+function createLegend(containerId, items) {
+    const container = document.getElementById(containerId)
+    if (!container) {
+        return
+    }
+
+    container.innerHTML = items.map(item => `
+        <div class="legend-item">
+            <span class="legend-swatch" style="background:${item.color};"></span>
+            <span class="legend-copy">
+                <span class="legend-label">${item.label}</span>
+                <span class="legend-value">${formatNumber(item.value)} | ${item.percent}</span>
+            </span>
+        </div>
+    `).join('')
+}
+
+function createDoughnutChart(key, canvasId, labels, values, colors) {
+    destroyChart(key)
+
+    const canvas = document.getElementById(canvasId)
+    if (!canvas) {
+        return
+    }
+
+    state.charts[key] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [
+                {
+                    data: values,
+                    radius: '90%',
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    hoverOffset: 6,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: prefersReducedMotion ? 0 : 540,
+                easing: 'easeOutCubic',
+            },
+            cutout: '68%',
+            layout: {
+                padding: {
+                    top: 16,
+                    right: 56,
+                    bottom: 12,
+                    left: 56,
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const total = context.dataset.data.reduce((sum, value) => sum + toNumber(value), 0)
+                            const raw = toNumber(context.raw)
+                            return `${context.label}: ${formatPercent(raw, total)} (${formatNumber(raw)})`
+                        },
+                    },
+                },
+            },
+        },
+    })
+}
+
+function createPaluComparisonChart(marketplaceSellerPalu, communitySeller) {
+    destroyChart('paluComparison')
+
+    const canvas = document.getElementById('paluComparisonChart')
+    if (!canvas) {
+        return
+    }
+
+    state.charts.paluComparison = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['Ecommerce Kota Palu', 'Komunitas Kota Palu'],
+            datasets: [
+                {
+                    data: [marketplaceSellerPalu, communitySeller],
+                    backgroundColor: ['#2563eb', '#0f766e'],
+                    borderRadius: 12,
+                    borderSkipped: false,
+                    barThickness: 18,
+                    maxBarThickness: 20,
+                    categoryPercentage: 0.72,
+                    barPercentage: 0.9,
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: prefersReducedMotion ? 0 : 600,
+                easing: 'easeOutCubic',
+            },
+            layout: {
+                padding: {
+                    top: 6,
+                    right: 10,
+                    bottom: 6,
+                    left: 6,
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(203, 213, 225, 0.72)',
+                    },
+                    border: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        callback(value) {
+                            return formatNumber(value)
+                        },
+                    },
+                },
+                y: {
+                    grid: {
+                        display: false,
+                    },
+                    border: {
+                        display: false,
+                    },
+                    ticks: {
+                        color: '#334155',
+                        font: {
+                            size: 12,
+                            weight: '600',
+                        },
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            return `Jumlah pelaku usaha: ${formatNumber(context.raw)}`
+                        },
+                    },
+                },
+                valueLabel: {
+                    enabled: true,
+                    formatter: value => formatNumber(value),
+                },
+            },
+        },
+    })
+}
+
+function normalizeStatus(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/_/g, '-')
+}
+
+function sumByStatus(rows, field, expectedStatus) {
+    return (Array.isArray(rows) ? rows : [])
+        .filter(row => normalizeStatus(row[field]) === expectedStatus)
+        .reduce((sum, row) => sum + toNumber(row.jumlah), 0)
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`)
+    }
+
+    return response.json()
+}
+
+const siteHeader = document.getElementById('siteHeader')
+
+function syncHeaderState() {
+    if (!siteHeader) {
+        return
+    }
+
+    if (window.scrollY > 28) {
+        siteHeader.classList.add('is-compact')
+    } else {
+        siteHeader.classList.remove('is-compact')
+    }
+}
+
+async function initializeFacebookPage() {
+    syncHeaderState()
+    window.addEventListener('scroll', syncHeaderState, { passive: true })
+    const loadingFallbackTimer = window.setTimeout(() => {
+        document.body.classList.add('facebook-ready')
+    }, 800)
+
+    try {
+        const dashboardData = await fetchJson('/api/dashboard/')
+
+        const marketplaceOverview = Array.isArray(dashboardData.ecommerce_overview)
+            ? (dashboardData.ecommerce_overview[0] || {})
+            : {}
+
+        const marketplaceRows = Array.isArray(dashboardData.ecommerce_pedagang)
+            ? dashboardData.ecommerce_pedagang
+            : []
+
+        const communityRows = Array.isArray(dashboardData.komunitas_pedagang)
+            ? dashboardData.komunitas_pedagang
+            : []
+
+        const marketplaceTotal = toNumber(marketplaceOverview.total_valid)
+        const marketplaceSeller = toNumber(marketplaceOverview.total_pedagang)
+        const marketplaceNonSeller = toNumber(marketplaceOverview.total_non_pedagang)
+
+        const communitySeller = sumByStatus(communityRows, 'kategori_final', 'pedagang')
+        const communityNonSeller = sumByStatus(communityRows, 'kategori_final', 'non-dagang')
+        const communityTotal = communitySeller + communityNonSeller
+
+        const paluMarketplaceSeller = (Array.isArray(dashboardData.ecommerce_palu_overview) ? dashboardData.ecommerce_palu_overview : [])
+            .filter(row => normalizeStatus(row.kategori) === 'pedagang')
+            .reduce((sum, row) => sum + toNumber(row.jumlah), 0)
+
+        setText('marketplaceTotal', formatNumber(marketplaceTotal))
+        setText('marketplaceSeller', formatNumber(marketplaceSeller))
+        setText('communityTotal', formatNumber(communityTotal))
+        setText('communitySeller', formatNumber(communitySeller))
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('facebook-ready')
+        await waitForNextPaint()
+
+        createDoughnutChart(
+            'marketplaceComposition',
+            'marketplaceCompositionChart',
+            ['Pelaku Usaha', 'Bukan Pelaku Usaha'],
+            [marketplaceSeller, marketplaceNonSeller],
+            ['#2563eb', '#bfd8fb']
+        )
+
+        createLegend('marketplaceLegend', [
+            {
+                label: 'Pelaku Usaha',
+                value: marketplaceSeller,
+                percent: formatPercent(marketplaceSeller, marketplaceTotal),
+                color: '#2563eb',
+            },
+            {
+                label: 'Bukan Pelaku Usaha',
+                value: marketplaceNonSeller,
+                percent: formatPercent(marketplaceNonSeller, marketplaceTotal),
+                color: '#bfd8fb',
+            },
+        ])
+
+        createDoughnutChart(
+            'communityComposition',
+            'communityCompositionChart',
+            ['Pelaku Usaha', 'Bukan Pelaku Usaha'],
+            [communitySeller, communityNonSeller],
+            ['#0f766e', '#8ce9d5']
+        )
+
+        createLegend('communityLegend', [
+            {
+                label: 'Pelaku Usaha',
+                value: communitySeller,
+                percent: formatPercent(communitySeller, communityTotal),
+                color: '#0f766e',
+            },
+            {
+                label: 'Bukan Pelaku Usaha',
+                value: communityNonSeller,
+                percent: formatPercent(communityNonSeller, communityTotal),
+                color: '#8ce9d5',
+            },
+        ])
+
+        createPaluComparisonChart(paluMarketplaceSeller, communitySeller)
+    } catch (error) {
+        console.error(error)
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('facebook-ready')
+        setLoadingMessage(
+            'Gagal memuat overview Facebook',
+            'Terjadi kendala saat mengambil data marketplace atau komunitas. Silakan muat ulang halaman.'
+        )
+    }
+}
+
+window.addEventListener('DOMContentLoaded', initializeFacebookPage)
+</script>
+</body>
+</html>

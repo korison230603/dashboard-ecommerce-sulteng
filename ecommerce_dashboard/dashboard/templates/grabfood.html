@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Merchant GrabFood Sulawesi Tengah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --grab: #00B14F;
+            --grab-dark: #007A3D;
+            --bg: #F5F7FB;
+            --card: #FFFFFF;
+            --text: #0F172A;
+            --muted: #64748B;
+            --border: #E5E7EB;
+            --red: #DC2626;
+            --amber: #F59E0B;
+            --blue: #2563EB;
+            --slate: #94A3B8;
+            --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+            --sidebar-width: 96px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(245, 247, 251, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 220;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        body.ready #loading {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-card {
+            width: min(92vw, 420px);
+            padding: 28px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.76);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 16px;
+            border-radius: 999px;
+            border: 4px solid rgba(0, 177, 79, 0.16);
+            border-top-color: var(--grab);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .loading-subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .app-shell { min-height: 100vh; }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: rgba(226, 232, 240, 0.78);
+            text-align: center;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            background: rgba(148, 163, 184, 0.12);
+            color: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            color: #ffffff;
+            box-shadow:
+                inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+                0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(148, 163, 184, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-grabfood {
+            background: linear-gradient(135deg, rgba(0, 177, 79, 0.34), rgba(0, 122, 61, 0.26));
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .nav-icon-facebook,
+        .nav-icon-tokopedia,
+        .nav-icon-shopee,
+        .nav-icon-lazada,
+        .nav-icon-blibli {
+            background-color: transparent;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 72%;
+            box-shadow: none;
+            overflow: hidden;
+        }
+
+        .nav-icon-facebook {
+            background-image: url('/static/dashboard/images/facebook.png');
+            background-size: 76%;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .nav-icon-tokopedia {
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 86%;
+        }
+
+        .nav-icon-shopee {
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 78%;
+        }
+
+        .nav-icon-lazada {
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 82%;
+        }
+
+        .nav-icon-blibli {
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .page {
+            width: min(1500px, calc(100% - var(--sidebar-width)));
+            margin-left: var(--sidebar-width);
+            padding: 28px;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 28px;
+            border-radius: 24px;
+            background:
+                linear-gradient(135deg, rgba(0, 177, 79, 0.14), rgba(37, 99, 235, 0.06)),
+                var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--grab-dark);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(30px, 3vw, 34px);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .subtitle {
+            max-width: 760px;
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .hero-badge {
+            min-width: 162px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: #0F172A;
+            color: #fff;
+            text-align: right;
+        }
+
+        .hero-badge span {
+            display: block;
+            color: #86EFAC;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .hero-badge strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 22px;
+        }
+
+        .section {
+            margin-top: 22px;
+        }
+
+        .filter-card,
+        .card,
+        .kpi-card,
+        .insight-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .filter-card {
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            align-items: end;
+        }
+
+        label {
+            display: grid;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        select {
+            width: 100%;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #fff;
+            color: var(--text);
+            padding: 0 12px;
+            font: inherit;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: var(--grab);
+            box-shadow: 0 0 0 3px rgba(0, 177, 79, 0.12);
+        }
+
+        .reset-button,
+        .export-button {
+            height: 44px;
+            border: 0;
+            border-radius: 14px;
+            padding: 0 16px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .reset-button {
+            background: #0F172A;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .kpi-card {
+            min-height: 136px;
+            border-radius: 18px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::after {
+            content: "";
+            position: absolute;
+            right: -28px;
+            bottom: -34px;
+            width: 86px;
+            height: 86px;
+            border-radius: 999px;
+            background: rgba(0, 177, 79, 0.10);
+        }
+
+        .kpi-icon {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            color: var(--grab-dark);
+            background: rgba(0, 177, 79, 0.10);
+        }
+
+        .kpi-label {
+            margin: 0 42px 12px 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.45;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .kpi-value {
+            margin: 0;
+            font-size: clamp(26px, 2.3vw, 32px);
+            font-weight: 800;
+            line-height: 1.12;
+            word-break: break-word;
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 23px;
+            letter-spacing: 0;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .insight-card {
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .insight-card h3 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .insight-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .card {
+            position: relative;
+            border-radius: 22px;
+            padding: 20px;
+            overflow: visible;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            padding-right: 34px;
+        }
+
+        .card h2,
+        .card h3 {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .card .summary {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .info-wrap {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 20;
+        }
+
+        .info-button {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--muted);
+            font-weight: 800;
+            cursor: help;
+        }
+
+        .info-wrap:hover .info-button {
+            background: #EFF6FF;
+            color: var(--blue);
+        }
+
+        .info-tooltip {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: min(260px, 72vw);
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #0F172A;
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.55;
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
+            transition: 0.16s ease;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.22);
+        }
+
+        .info-wrap:hover .info-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #merchantMap {
+            height: 520px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: #EEF2F7;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+            gap: 18px;
+        }
+
+        .chart-box {
+            height: 320px;
+            position: relative;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .export-button {
+            background: rgba(0, 177, 79, 0.10);
+            color: var(--grab-dark);
+            border: 1px solid rgba(0, 177, 79, 0.22);
+        }
+
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        th,
+        td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        th {
+            background: #F8FAFC;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        td.name-cell {
+            white-space: normal;
+            min-width: 240px;
+            font-weight: 700;
+        }
+
+        td.coord-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            background: var(--slate);
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 28px;
+            border-radius: 18px;
+            border: 1px dashed var(--border);
+            color: var(--muted);
+            text-align: center;
+            background: #F8FAFC;
+        }
+
+        .marker-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 3px solid #fff;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.28);
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            line-height: 1.55;
+        }
+
+        .popup-title {
+            margin: 0 0 8px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        @media (max-width: 1280px) {
+            .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .insight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 980px) {
+            :root { --sidebar-width: 0px; }
+            .sidebar {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                height: auto;
+                padding: 14px 18px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                overflow-x: auto;
+            }
+            .sidebar-nav { grid-auto-flow: column; gap: 10px; }
+            .nav-item { min-width: 84px; min-height: auto; padding: 10px 8px; }
+            .page {
+                width: 100%;
+                margin-left: 0;
+                padding: 18px;
+            }
+            .hero { flex-direction: column; }
+            .hero-badge { text-align: left; }
+            .filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .chart-grid { grid-template-columns: 1fr; }
+            #merchantMap { height: 460px; }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+            .sidebar-nav {
+                grid-auto-flow: row;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .page { padding: 14px; }
+            .hero,
+            .card,
+            .filter-card { padding: 16px; border-radius: 18px; }
+            .filter-form,
+            .stats-grid,
+            .insight-grid { grid-template-columns: 1fr; }
+            .card-header { flex-direction: column; }
+            #merchantMap { height: 380px; }
+            .table-actions { width: 100%; }
+            .export-button { flex: 1 1 100%; }
+        }
+    
+        /* Sidebar safety: keep the final GrabFood item visible on short screens. */
+        .sidebar {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .sidebar-nav {
+            padding-bottom: 14px;
+        }
+    
+
+        /* Professional sidebar logo treatment shared across dashboard pages. */
+        .sidebar .nav-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.94);
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.30);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.90),
+                0 10px 20px rgba(2, 6, 23, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover .nav-icon,
+        .sidebar .nav-item.active .nav-icon {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 14px 24px rgba(2, 6, 23, 0.28),
+                0 0 0 4px rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .nav-icon-menu {
+            color: #f8fafc;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(15, 118, 110, 0.26)),
+                rgba(15, 23, 42, 0.56);
+        }
+
+        .sidebar .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.22));
+        }
+
+        .sidebar .nav-icon-facebook {
+            background-color: #ffffff;
+            background-image: none;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .nav-icon-facebook .sidebar-logo {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sidebar .nav-icon-tokopedia {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-shopee {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 76%;
+        }
+
+        .sidebar .nav-icon-lazada {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 78%;
+        }
+
+        .sidebar .nav-icon-blibli {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-grabfood {
+            background: #ffffff;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .sidebar-logo {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .sidebar .nav-icon-grabfood .sidebar-logo {
+            width: 31px;
+            height: 31px;
+        }
+
+        .sidebar .nav-label {
+            letter-spacing: 0.02em;
+        }
+
+
+        /* Keep page titles restrained and subtitles light across dashboards. */
+        .page-title,
+        .hero h1,
+        h1 {
+            font-size: clamp(1.55rem, 2vw, 2.05rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle,
+        .hero p,
+        .subtitle {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: 0;
+        }
+
+
+        /* Tighten the spacing between page subtitles and filter controls. */
+        .site-header-inner {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        .page-heading {
+            gap: 2px;
+        }
+
+        .page-shell {
+            gap: 16px;
+        }
+
+        .filter-toolbar,
+        .filter-panel {
+            margin-top: 0;
+        }
+
+        .hero {
+            gap: 6px;
+        }
+
+        @media (min-width: 981px) {
+            .page-shell {
+                padding-top: 112px;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .page-shell {
+                padding-top: 232px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding-top: 202px;
+            }
+        }
+
+        .hero + .filter-card {
+            margin-top: 14px;
+        }
+
+        .page > .hero,
+        .page > .filter-card,
+        .page > .stats-grid,
+        .page > .section,
+        .page > .copyright-footer {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease,
+                background 0.28s ease;
+            will-change: opacity, transform;
+        }
+
+        body:not(.ready) .page > .hero,
+        body:not(.ready) .page > .filter-card,
+        body:not(.ready) .page > .stats-grid,
+        body:not(.ready) .page > .section,
+        body:not(.ready) .page > .copyright-footer {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        body.ready .page > .filter-card {
+            transition-delay: 70ms;
+        }
+
+        body.ready .page > .stats-grid {
+            transition-delay: 120ms;
+        }
+
+        body.ready .page > .section {
+            transition-delay: 170ms;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #loading {
+                transition: none;
+            }
+
+            .loading-spinner {
+                animation: none;
+            }
+
+            .page > .hero,
+            .page > .filter-card,
+            .page > .stats-grid,
+            .page > .section,
+            .page > .copyright-footer {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+        }
+
+
+        /* BPS copyright footer shared across dashboard pages. */
+        .copyright-footer {
+            width: min(100% - 48px, 1320px);
+            margin: 24px auto 0;
+            padding: 14px 0 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.24);
+            color: var(--muted, #64748b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .copyright-footer {
+                width: min(100% - 28px, 100%);
+                margin-top: 18px;
+                padding-top: 12px;
+            }
+        }
+</style>
+</head>
+<body>
+    <div id="loading" aria-live="polite" aria-busy="true">
+        <div class="loading-card">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p id="loadingTitle" class="loading-title">Sedang memuat dashboard GrabFood</p>
+            <p id="loadingSubtitle" class="loading-subtitle">Menyiapkan peta, chart, dan tabel merchant GrabFood.</p>
+        </div>
+    </div>
+
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Navigasi dashboard">
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                            <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                            <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                            <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Ringkasan</span>
+                </a>
+                <a href="/facebook/" class="nav-item" aria-label="Overview Facebook">
+                    <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+                    <span class="nav-label">Facebook</span>
+                </a>
+                <a href="/tokopedia/" class="nav-item" aria-label="Dashboard Tokopedia">
+                    <span class="nav-icon nav-icon-tokopedia" aria-hidden="true"></span>
+                    <span class="nav-label">Tokopedia</span>
+                </a>
+                <a href="/shopee/" class="nav-item" aria-label="Dashboard Shopee">
+                    <span class="nav-icon nav-icon-shopee" aria-hidden="true"></span>
+                    <span class="nav-label">Shopee</span>
+                </a>
+                <a href="/lazada/" class="nav-item" aria-label="Dashboard Lazada">
+                    <span class="nav-icon nav-icon-lazada" aria-hidden="true"></span>
+                    <span class="nav-label">Lazada</span>
+                </a>
+                <a href="/blibli/" class="nav-item" aria-label="Dashboard Blibli">
+                    <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+                    <span class="nav-label">Blibli</span>
+                </a>
+                <a href="/grabfood/" class="nav-item active" aria-current="page" aria-label="Dashboard GrabFood">
+                    <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+                    <span class="nav-label">GrabFood</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="page">
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Dashboard GrabFood</p>
+                    <h1>Dashboard Merchant GrabFood Sulawesi Tengah</h1>
+                    <p class="subtitle">Analisis sebaran merchant GrabFood berdasarkan titik koordinat, status operasional, dan kabupaten/kota.</p>
+                </div>
+                <div class="hero-badge">
+                    <span>Total Merchant</span>
+                    <strong>{{ kpi.total_merchant }}</strong>
+                </div>
+            </header>
+
+            <section class="section filter-card" aria-label="Filter Data">
+                <form class="filter-form" method="get" action="/grabfood/">
+                    <label>
+                        Kabupaten/Kota
+                        <select name="kab_kota" onchange="this.form.submit()">
+                            <option value="">Semua Kabupaten/Kota</option>
+                            {% for option in kab_kota_options %}
+                                <option value="{{ option }}" {% if selected_kab_kota == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>
+                        Status Operasional
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="">Semua Status</option>
+                            {% for option in status_options %}
+                                <option value="{{ option }}" {% if selected_status == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <a class="reset-button" href="/grabfood/"><i data-lucide="rotate-ccw"></i>Reset Filter</a>
+                </form>
+            </section>
+
+            <section class="section stats-grid" aria-label="KPI GrabFood">
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="store"></i></span><p class="kpi-label">Total Merchant</p><p class="kpi-value">{{ kpi.total_merchant }}</p></article>
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="map-pin-check"></i></span><p class="kpi-label">Total Titik Lokasi Valid</p><p class="kpi-value">{{ kpi.total_valid }}</p></article>
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="badge-check"></i></span><p class="kpi-label">Merchant Buka</p><p class="kpi-value">{{ kpi.merchant_buka }}</p></article>
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="clock-alert"></i></span><p class="kpi-label">Merchant Tutup/Sementara</p><p class="kpi-value">{{ kpi.merchant_tutup_sementara }}</p></article>
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="map"></i></span><p class="kpi-label">Kab/Kota Terdata</p><p class="kpi-value">{{ kpi.kab_kota_terdata }}</p></article>
+                <article class="kpi-card"><span class="kpi-icon"><i data-lucide="crown"></i></span><p class="kpi-label">Lokasi Dominan</p><p class="kpi-value">{{ kpi.lokasi_dominan }}</p></article>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Insight Utama GrabFood</h2>
+                <div class="insight-grid">
+                    <article class="insight-card"><h3>Wilayah Dominan</h3><p>{{ insights.wilayah_dominan }} menjadi wilayah dengan jumlah merchant paling banyak pada filter aktif.</p></article>
+                    <article class="insight-card"><h3>Status Dominan</h3><p>Status operasional yang paling banyak muncul adalah {{ insights.status_dominan }}.</p></article>
+                    <article class="insight-card"><h3>Cakupan Titik Lokasi</h3><p>{{ insights.cakupan_titik }} titik lokasi valid tersedia dan dapat dipetakan.</p></article>
+                    <article class="insight-card"><h3>Cakupan Wilayah</h3><p>Data merchant mencakup {{ insights.cakupan_wilayah }} kabupaten/kota pada filter aktif.</p></article>
+                </div>
+            </section>
+
+            <section class="section card">
+                <div class="info-wrap">
+                    <button class="info-button" type="button" aria-label="Informasi peta">i</button>
+                    <div class="info-tooltip" role="tooltip">Peta ini menunjukkan sebaran titik merchant GrabFood berdasarkan koordinat latitude dan longitude yang valid.</div>
+                </div>
+                <div class="card-header">
+                    <div>
+                        <h2>Sebaran Titik Merchant GrabFood Sulawesi Tengah</h2>
+                        <p class="summary" id="mapSummary">Menyiapkan peta merchant.</p>
+                    </div>
+                </div>
+                <div id="merchantMap"></div>
+            </section>
+
+            <section class="section chart-grid">
+                <article class="card">
+                    <div class="info-wrap">
+                        <button class="info-button" type="button" aria-label="Informasi grafik kabupaten kota">i</button>
+                        <div class="info-tooltip" role="tooltip">Grafik ini menunjukkan jumlah merchant GrabFood di setiap kabupaten/kota untuk melihat wilayah dengan aktivitas merchant paling tinggi.</div>
+                    </div>
+                    <div class="card-header"><div><h3>Jumlah Merchant GrabFood per Kabupaten/Kota</h3><p class="summary">Diurutkan dari jumlah merchant terbanyak.</p></div></div>
+                    <div class="chart-box"><canvas id="locationChart"></canvas></div>
+                </article>
+
+                <article class="card">
+                    <div class="info-wrap">
+                        <button class="info-button" type="button" aria-label="Informasi grafik status">i</button>
+                        <div class="info-tooltip" role="tooltip">Grafik ini menunjukkan komposisi status operasional merchant GrabFood berdasarkan data yang tersedia.</div>
+                    </div>
+                    <div class="card-header"><div><h3>Komposisi Status Operasional Merchant</h3><p class="summary">Perbandingan merchant buka, tutup, dan status lainnya.</p></div></div>
+                    <div class="chart-box"><canvas id="statusChart"></canvas></div>
+                </article>
+            </section>
+
+            <section class="section card">
+                <div class="info-wrap">
+                    <button class="info-button" type="button" aria-label="Informasi tabel">i</button>
+                    <div class="info-tooltip" role="tooltip">Tabel ini menampilkan data detail merchant GrabFood yang digunakan pada visualisasi peta dan grafik.</div>
+                </div>
+                <div class="card-header">
+                    <div>
+                        <h2>Data Merchant GrabFood</h2>
+                        <p class="summary" id="tableSummary">Menampilkan data merchant sesuai filter aktif.</p>
+                    </div>
+                    <div class="table-actions">
+                        <button class="export-button" type="button" onclick="exportExcel()"><i data-lucide="file-spreadsheet"></i>Export Excel</button>
+                        <button class="export-button" type="button" onclick="exportCsv()"><i data-lucide="file-text"></i>Export CSV</button>
+                        <button class="export-button" type="button" onclick="exportJson()"><i data-lucide="braces"></i>Export JSON</button>
+                    </div>
+                </div>
+                {% if has_data %}
+                    <div class="table-scroll">
+                        <table aria-label="Data Merchant GrabFood">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Merchant ID</th>
+                                    <th>Nama Merchant</th>
+                                    <th>Kab/Kota</th>
+                                    <th>Status Operasional</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                </tr>
+                            </thead>
+                            <tbody id="merchantTableBody"></tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">Data belum tersedia</div>
+                {% endif %}
+            </section>
+            <footer class="copyright-footer" aria-label="Copyright">&copy; BPS SULTENG 2026</footer>
+</main>
+    </div>
+
+    <script>
+        const merchantRows = JSON.parse('{{ grabfood_rows|escapejs }}')
+        const mapRows = JSON.parse('{{ grabfood_map_rows|escapejs }}')
+
+        const statusColors = {
+            'Buka': '#16A34A',
+            'Tutup': '#DC2626',
+            'Tutup Sementara': '#F59E0B',
+            'Jadwal Tersedia': '#2563EB',
+            'Tutup Sementara/Jadwal Tersedia': '#F59E0B',
+            'Tidak Diketahui': '#94A3B8'
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('id-ID').format(Number(value || 0))
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]))
+        }
+
+        function getStatusColor(status) {
+            if (statusColors[status]) return statusColors[status]
+            const normalized = String(status || '').toLowerCase()
+            if (normalized.includes('buka')) return '#16A34A'
+            if (normalized.includes('jadwal')) return '#2563EB'
+            if (normalized.includes('sementara')) return '#F59E0B'
+            if (normalized.includes('tutup')) return '#DC2626'
+            return '#94A3B8'
+        }
+
+        function decimalText(value) {
+            const number = Number(value)
+            return Number.isFinite(number) ? number.toFixed(6) : '-'
+        }
+
+        function countBy(rows, key) {
+            return rows.reduce((acc, row) => {
+                const label = row[key] || 'Tidak Diketahui'
+                acc[label] = (acc[label] || 0) + 1
+                return acc
+            }, {})
+        }
+
+        function sortedEntries(counts) {
+            return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        }
+
+        function parseDisplayNumber(value) {
+            const cleaned = String(value ?? '').replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')
+            if (!cleaned || cleaned === '-' || cleaned === '.') return null
+            const parsed = Number(cleaned)
+            return Number.isFinite(parsed) ? parsed : null
+        }
+
+        function animateKpiValues() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+            document.querySelectorAll('.kpi-value').forEach((element) => {
+                const target = parseDisplayNumber(element.textContent)
+                if (target === null) return
+
+                const template = element.textContent.trim()
+                const duration = 850
+                const startedAt = performance.now()
+                const step = (now) => {
+                    const progress = Math.min((now - startedAt) / duration, 1)
+                    const eased = 1 - Math.pow(1 - progress, 3)
+                    element.textContent = formatNumber(Math.round(target * eased))
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step)
+                    } else {
+                        element.textContent = template
+                    }
+                }
+
+                element.textContent = '0'
+                requestAnimationFrame(step)
+            })
+        }
+
+        function setLoadingMessage(title, subtitle) {
+            const titleElement = document.getElementById('loadingTitle')
+            const subtitleElement = document.getElementById('loadingSubtitle')
+            if (titleElement) titleElement.textContent = title
+            if (subtitleElement) subtitleElement.textContent = subtitle
+        }
+
+        function waitForNextPaint() {
+            return new Promise((resolve) => {
+                requestAnimationFrame(() => requestAnimationFrame(resolve))
+            })
+        }
+
+        function createMap() {
+            const map = L.map('merchantMap', { scrollWheelZoom: false })
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map)
+
+            if (!mapRows.length) {
+                map.setView([-0.9003, 119.8780], 12)
+                document.getElementById('mapSummary').textContent = 'Belum ada titik valid. Peta diarahkan ke area Kota Palu.'
+                return
+            }
+
+            const cluster = L.markerClusterGroup()
+            const bounds = []
+            mapRows.forEach((row) => {
+                const lat = Number(row.latitude)
+                const lng = Number(row.longitude)
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+                const color = getStatusColor(row.status_label)
+                const icon = L.divIcon({
+                    className: '',
+                    html: `<div class="marker-dot" style="background:${color}"></div>`,
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
+                })
+                const popup = `
+                    <p class="popup-title">${escapeHtml(row.merchant_name)}</p>
+                    <strong>Merchant ID:</strong> ${escapeHtml(row.merchant_id || '-')}<br>
+                    <strong>Kab/Kota:</strong> ${escapeHtml(row.kab_kota)}<br>
+                    <strong>Status Operasional:</strong> ${escapeHtml(row.status_label)}<br>
+                    <strong>Latitude:</strong> ${decimalText(lat)}<br>
+                    <strong>Longitude:</strong> ${decimalText(lng)}
+                `
+                cluster.addLayer(L.marker([lat, lng], { icon }).bindPopup(popup))
+                bounds.push([lat, lng])
+            })
+            map.addLayer(cluster)
+
+            if (bounds.length) {
+                map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 })
+                document.getElementById('mapSummary').textContent = `${formatNumber(bounds.length)} titik merchant valid tampil di peta.`
+            } else {
+                map.setView([-0.9003, 119.8780], 12)
+                document.getElementById('mapSummary').textContent = 'Belum ada titik valid. Peta diarahkan ke area Kota Palu.'
+            }
+        }
+
+        function createCharts() {
+            const locationData = sortedEntries(countBy(merchantRows, 'kab_kota'))
+            new Chart(document.getElementById('locationChart'), {
+                type: 'bar',
+                data: {
+                    labels: locationData.map(([label]) => label),
+                    datasets: [{
+                        label: 'Jumlah Merchant',
+                        data: locationData.map(([, total]) => total),
+                        backgroundColor: '#00B14F',
+                        borderRadius: 8,
+                        barThickness: 18
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => `${formatNumber(context.raw)} merchant` } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#E5E7EB' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            })
+
+            const statusData = sortedEntries(countBy(merchantRows, 'status_label'))
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.map(([label]) => label),
+                    datasets: [{
+                        data: statusData.map(([, total]) => total),
+                        backgroundColor: statusData.map(([label]) => getStatusColor(label)),
+                        borderWidth: 3,
+                        borderColor: '#FFFFFF'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    cutout: '64%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } },
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${formatNumber(context.raw)} merchant` } }
+                    }
+                }
+            })
+        }
+
+        function renderTable() {
+            const body = document.getElementById('merchantTableBody')
+            if (!body) return
+            body.innerHTML = merchantRows.map((row, index) => {
+                const color = getStatusColor(row.status_label)
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${escapeHtml(row.merchant_id || '-')}</td>
+                        <td class="name-cell">${escapeHtml(row.merchant_name)}</td>
+                        <td>${escapeHtml(row.kab_kota)}</td>
+                        <td><span class="status-pill" style="background:${color}">${escapeHtml(row.status_label)}</span></td>
+                        <td class="coord-cell">${decimalText(row.latitude)}</td>
+                        <td class="coord-cell">${decimalText(row.longitude)}</td>
+                    </tr>
+                `
+            }).join('')
+            document.getElementById('tableSummary').textContent = `${formatNumber(merchantRows.length)} merchant ditampilkan sesuai filter aktif.`
+        }
+
+        function exportRows() {
+            return merchantRows.map((row, index) => ({
+                No: index + 1,
+                'Merchant ID': row.merchant_id || '',
+                'Nama Merchant': row.merchant_name || '',
+                'Kab/Kota': row.kab_kota || 'Tidak Diketahui',
+                'Status Operasional': row.status_label || 'Tidak Diketahui',
+                Latitude: row.latitude ?? '',
+                Longitude: row.longitude ?? ''
+            }))
+        }
+
+        function downloadBlob(filename, content, type) {
+            const blob = new Blob([content], { type })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename
+            link.click()
+            URL.revokeObjectURL(url)
+        }
+
+        function exportExcel() {
+            const worksheet = XLSX.utils.json_to_sheet(exportRows())
+            const workbook = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'GrabFood')
+            XLSX.writeFile(workbook, 'grabfood_sulteng.xlsx')
+        }
+
+        function exportCsv() {
+            const worksheet = XLSX.utils.json_to_sheet(exportRows())
+            downloadBlob('grabfood_sulteng.csv', XLSX.utils.sheet_to_csv(worksheet), 'text/csv;charset=utf-8;')
+        }
+
+        function exportJson() {
+            downloadBlob('grabfood_sulteng.json', JSON.stringify(exportRows(), null, 2), 'application/json;charset=utf-8;')
+        }
+
+        async function initializeGrabFoodPage() {
+            const loadingFallbackTimer = window.setTimeout(() => {
+                document.body.classList.add('ready')
+            }, 1800)
+
+            try {
+                setLoadingMessage('Sedang memuat dashboard GrabFood', 'Menyiapkan peta, chart, dan tabel merchant GrabFood.')
+                if (window.lucide) {
+                    lucide.createIcons({ attrs: { width: 18, height: 18, strokeWidth: 2.2 } })
+                }
+                createMap()
+                createCharts()
+                renderTable()
+                animateKpiValues()
+                await waitForNextPaint()
+            } catch (error) {
+                console.error(error)
+            } finally {
+                window.clearTimeout(loadingFallbackTimer)
+                document.body.classList.add('ready')
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initializeGrabFoodPage)
+    </script>
+</body>
+</html>

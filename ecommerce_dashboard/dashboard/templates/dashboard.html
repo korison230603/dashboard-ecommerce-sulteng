@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ringkasan Aktivitas Pelaku Usaha Digital Sulawesi Tengah</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e5e7eb;
+            --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+            --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
+            --tokopedia: #00aa5b;
+            --shopee: #ee4d2d;
+            --lazada: #1e3a8a;
+            --blibli: #00aeef;
+            --facebook: #1877f2;
+            --community: #0f766e;
+            --warning: #f59e0b;
+            --sidebar-width: 96px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Manrope, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: grid;
+            place-items: center;
+            background: rgba(245, 247, 251, 0.92);
+            backdrop-filter: blur(10px);
+            transition: opacity 0.32s ease, visibility 0.32s ease;
+        }
+
+        body.ready #loading {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-card {
+            width: min(90vw, 430px);
+            padding: 28px;
+            border-radius: 22px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 16px;
+            border-radius: 999px;
+            border: 4px solid rgba(24, 119, 242, 0.16);
+            border-top-color: var(--facebook);
+            border-right-color: var(--tokopedia);
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .loading-subtitle {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar-width);
+            z-index: 120;
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            color: rgba(226, 232, 240, 0.78);
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            color: #ffffff;
+            background: rgba(148, 163, 184, 0.12);
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18), 0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 76%;
+            background-color: rgba(148, 163, 184, 0.12);
+        }
+
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-facebook { background-color: rgba(24, 119, 242, 0.16); }
+        .nav-icon-tokopedia { background-image: url('/static/dashboard/images/Logo_Tokopedia.png'); background-size: 86%; }
+        .nav-icon-shopee { background-image: url('/static/dashboard/images/Logo_Shopee.png'); }
+        .nav-icon-lazada { background-image: url('/static/dashboard/images/Logo_Lazada.png'); }
+        .nav-icon-blibli { background-image: url('/static/dashboard/images/blibli-logo.png'); background-size: 86%; }
+        .nav-icon-grabfood {
+            background: rgba(0, 177, 79, 0.16);
+        }
+
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .main-stage {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .page-shell {
+            width: min(100% - 48px, 1440px);
+            margin: 0 auto;
+            padding: 34px 0 56px;
+            display: grid;
+            gap: 24px;
+        }
+
+        .hero,
+        .filter-panel,
+        .panel,
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .hero {
+            padding: 22px 26px;
+            display: grid;
+            gap: 8px;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(24, 119, 242, 0.12), transparent 32%),
+                radial-gradient(circle at 95% 18%, rgba(0, 170, 91, 0.12), transparent 28%),
+                #ffffff;
+        }
+
+        .hero h1 {
+            margin: 0;
+            max-width: none;
+            font-size: clamp(1.55rem, 1.8vw, 1.9rem);
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: none;
+            color: var(--muted);
+            font-size: clamp(0.88rem, 1.1vw, 1rem);
+            line-height: 1.45;
+            white-space: nowrap;
+        }
+
+        .filter-panel {
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 60;
+        }
+
+        .filter-menu {
+            position: relative;
+        }
+
+        .filter-menu[open] {
+            z-index: 80;
+        }
+
+        .filter-trigger {
+            min-width: 214px;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+            cursor: pointer;
+            list-style: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .filter-trigger:hover,
+        .filter-menu[open] .filter-trigger {
+            border-color: rgba(24, 119, 242, 0.34);
+            box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.08);
+        }
+
+        .filter-trigger::marker,
+        .filter-trigger::-webkit-details-marker {
+            display: none;
+        }
+
+        .filter-trigger-main {
+            display: inline-grid;
+            gap: 2px;
+        }
+
+        .filter-title {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .filter-count {
+            color: var(--text);
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .filter-value {
+            color: var(--muted);
+            font-size: 0.84rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: min(320px, calc(100vw - 48px));
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 130;
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14);
+            display: grid;
+            gap: 4px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 12px;
+            color: var(--text);
+            font-weight: 700;
+            line-height: 1.35;
+            cursor: pointer;
+        }
+
+        .filter-option:hover {
+            background: #f8fafc;
+        }
+
+        .filter-option input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--facebook);
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .filter-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .apply-button,
+        .reset-button {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .apply-button {
+            color: #0f172a;
+            background: #ffffff;
+            border: 1px solid var(--border);
+        }
+
+        .reset-button {
+            color: #0f172a;
+            background: #ffffff;
+            border: 1px solid var(--border);
+        }
+
+        .apply-button:hover,
+        .reset-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
+        }
+
+        .section {
+            display: grid;
+            gap: 16px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 0 4px;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: clamp(1.28rem, 2vw, 1.85rem);
+            line-height: 1.2;
+        }
+
+        .section-heading p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            min-height: 112px;
+            padding: 18px;
+            display: grid;
+            gap: 12px;
+            align-content: center;
+            position: relative;
+            overflow: visible;
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            right: -34px;
+            bottom: -42px;
+            width: 118px;
+            height: 118px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--accent, var(--facebook)) 14%, transparent);
+        }
+
+        .stat-top {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding-right: 30px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            line-height: 1.35;
+            text-transform: uppercase;
+        }
+
+        .stat-number {
+            margin: 0;
+            position: relative;
+            z-index: 1;
+            font-size: clamp(1.2rem, 1.55vw, 1.7rem);
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .panel {
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .panel-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 1.08rem;
+            line-height: 1.25;
+        }
+
+        .info-tooltip {
+            position: relative;
+            display: inline-flex;
+            flex: 0 0 auto;
+            z-index: 20;
+        }
+
+        .stat-info {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+        }
+
+        .info-button {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            color: var(--muted);
+            display: inline-grid;
+            place-items: center;
+            padding: 0;
+            font-size: 0.84rem;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .info-button:hover,
+        .info-button:focus-visible {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #bfdbfe;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+        }
+
+        .tooltip-content {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: min(260px, calc(100vw - 48px));
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.24);
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+            z-index: 500;
+            transition: opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        .info-tooltip:hover .tooltip-content,
+        .info-tooltip:focus-within .tooltip-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .panel-note,
+        .muted-note {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .chart-box {
+            height: 320px;
+            position: relative;
+        }
+
+        .chart-box.short {
+            height: 280px;
+        }
+
+        .grabfood-section {
+            padding: 22px;
+            border-radius: 24px;
+            border: 1px solid rgba(0, 177, 79, 0.20);
+            background:
+                linear-gradient(135deg, rgba(232, 255, 243, 0.94), rgba(255, 255, 255, 0.96)),
+                #ffffff;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .grabfood-heading {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .grabfood-heading h2 {
+            margin: 0;
+            font-size: clamp(1.28rem, 2vw, 1.85rem);
+            line-height: 1.2;
+        }
+
+        .grabfood-heading p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .grabfood-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #E8FFF3;
+            color: #007A3D;
+            border: 1px solid rgba(0, 177, 79, 0.24);
+            font-size: 0.76rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .grabfood-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .grabfood-mini-card {
+            min-height: 104px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 177, 79, 0.18);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .grabfood-mini-label {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 900;
+            line-height: 1.35;
+            text-transform: uppercase;
+        }
+
+        .grabfood-mini-value {
+            margin: 0;
+            color: var(--text);
+            font-size: clamp(1.2rem, 1.6vw, 1.7rem);
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .grabfood-content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+            gap: 16px;
+        }
+
+        .grabfood-panel {
+            padding: 18px;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            min-width: 0;
+        }
+
+        .grabfood-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .grabfood-panel h3 {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.35;
+        }
+
+        #grabfoodMiniMap {
+            height: 360px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #eef2f7;
+            overflow: hidden;
+        }
+
+        .grabfood-chart-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .grabfood-chart-box {
+            height: 168px;
+            position: relative;
+        }
+
+        .grabfood-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 13px;
+            color: #ffffff;
+            background: #00B14F;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 900;
+            box-shadow: 0 12px 24px rgba(0, 177, 79, 0.22);
+            white-space: nowrap;
+        }
+
+        .grabfood-note {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.6;
+        }
+
+        .grabfood-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 3px solid #ffffff;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.24);
+        }
+
+        .chart-empty {
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 18px;
+            background: #f8fafc;
+        }
+
+        .table-wrap {
+            overflow-x: visible;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 0;
+            background: #ffffff;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+
+        th {
+            color: var(--muted);
+            background: #f8fafc;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .numeric {
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        th.numeric {
+            white-space: normal;
+        }
+
+        th:nth-child(1),
+        td:nth-child(1) {
+            width: 16%;
+        }
+
+        th:nth-child(2),
+        td:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(3),
+        th:nth-child(4),
+        td:nth-child(4) {
+            width: 9%;
+        }
+
+        th:nth-child(5),
+        td:nth-child(5) {
+            width: 17%;
+        }
+
+        th:nth-child(6),
+        td:nth-child(6) {
+            width: 12%;
+        }
+
+        th:last-child,
+        td:last-child {
+            width: 28%;
+            min-width: 0;
+        }
+
+        .note-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: normal;
+        }
+
+        .platform-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .platform-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 999px;
+            background: var(--dot, var(--facebook));
+        }
+
+        .page-motion {
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                opacity 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s ease,
+                border-color 0.28s ease,
+                background 0.28s ease;
+            transition-delay: var(--delay, 0ms);
+            will-change: opacity, transform;
+        }
+
+        body:not(.ready) .page-motion {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        .toast {
+            display: none;
+            padding: 12px 14px;
+            border-radius: 16px;
+            color: #92400e;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            font-weight: 700;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @media (max-width: 1200px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 920px) {
+            :root {
+                --sidebar-width: 100%;
+            }
+
+            .sidebar {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                height: auto;
+                padding: 10px;
+                overflow-x: auto;
+            }
+
+            .sidebar-nav {
+                grid-auto-flow: column;
+                grid-auto-columns: minmax(86px, 1fr);
+            }
+
+            .nav-item {
+                min-height: auto;
+                padding: 10px 8px;
+            }
+
+            .main-stage {
+                margin-left: 0;
+            }
+
+            .page-shell {
+                width: min(100% - 28px, 1440px);
+                padding-top: 20px;
+            }
+
+            .filter-panel,
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tooltip-content {
+                right: -8px;
+                width: min(250px, calc(100vw - 32px));
+            }
+
+            .hero,
+            .panel,
+            .stat-card,
+            .filter-panel {
+                border-radius: 18px;
+                padding: 18px;
+            }
+
+            .hero h1,
+            .hero p {
+                white-space: normal;
+            }
+
+            .chart-box,
+            .chart-box.short {
+                height: 300px;
+            }
+
+            .grabfood-heading,
+            .grabfood-content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grabfood-heading {
+                flex-direction: column;
+            }
+
+            .grabfood-kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #grabfoodMiniMap {
+                height: 320px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+
+            .page-motion {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    
+        /* Sidebar safety: keep the final GrabFood item visible on short screens. */
+        .sidebar {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .sidebar-nav {
+            padding-bottom: 14px;
+        }
+
+        .nav-item {
+            min-height: 68px; /* keep 7 sidebar items visible */
+        }
+
+        .nav-icon-grabfood {
+            background: rgba(0, 177, 79, 0.16);
+        }
+    
+        .nav-item {
+            min-height: 64px;
+            padding: 7px 5px;
+            gap: 5px;
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+        }
+    
+
+        /* Professional sidebar logo treatment shared across dashboard pages. */
+        .sidebar .nav-icon {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.94);
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.30);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.90),
+                0 10px 20px rgba(2, 6, 23, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover .nav-icon,
+        .sidebar .nav-item.active .nav-icon {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.48);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 14px 24px rgba(2, 6, 23, 0.28),
+                0 0 0 4px rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar .nav-icon-menu {
+            color: #f8fafc;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(15, 118, 110, 0.26)),
+                rgba(15, 23, 42, 0.56);
+        }
+
+        .sidebar .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.22));
+        }
+
+        .sidebar .nav-icon-facebook {
+            background-color: #ffffff;
+            background-image: none;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .nav-icon-facebook .sidebar-logo {
+            width: 29px;
+            height: 29px;
+        }
+
+        .sidebar .nav-icon-tokopedia {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Tokopedia.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-shopee {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Shopee.png');
+            background-size: 76%;
+        }
+
+        .sidebar .nav-icon-lazada {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/Logo_Lazada.png');
+            background-size: 78%;
+        }
+
+        .sidebar .nav-icon-blibli {
+            background-color: #ffffff;
+            background-image: url('/static/dashboard/images/blibli-logo.png');
+            background-size: 82%;
+        }
+
+        .sidebar .nav-icon-grabfood {
+            background: #ffffff;
+            color: transparent;
+            font-size: 0;
+        }
+
+        .sidebar .sidebar-logo {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: saturate(1.05) contrast(1.02);
+        }
+
+        .sidebar .nav-icon-grabfood .sidebar-logo {
+            width: 31px;
+            height: 31px;
+        }
+
+        .sidebar .nav-label {
+            letter-spacing: 0.02em;
+        }
+
+
+        /* Keep page titles restrained and subtitles light across dashboards. */
+        .page-title,
+        .hero h1,
+        h1 {
+            font-size: clamp(1.55rem, 2vw, 2.05rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle,
+        .hero p,
+        .subtitle {
+            font-size: clamp(0.9rem, 1vw, 1rem);
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: 0;
+        }
+
+
+        /* Tighten the spacing between page subtitles and filter controls. */
+        .site-header-inner {
+            padding-top: 12px;
+            padding-bottom: 10px;
+        }
+
+        .page-heading {
+            gap: 2px;
+        }
+
+        .page-shell {
+            gap: 16px;
+        }
+
+        .filter-toolbar,
+        .filter-panel {
+            margin-top: 0;
+        }
+
+        .hero {
+            gap: 6px;
+        }
+
+        @media (min-width: 981px) {
+            .page-shell {
+                padding-top: 112px;
+            }
+        }
+
+        @media (max-width: 980px) {
+            .page-shell {
+                padding-top: 232px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding-top: 202px;
+            }
+        }
+
+        .main-stage > .page-shell {
+            padding-top: 28px;
+        }
+
+        @media (max-width: 920px) {
+            .main-stage > .page-shell {
+                padding-top: 18px;
+            }
+        }
+
+
+        /* BPS copyright footer shared across dashboard pages. */
+        .copyright-footer {
+            width: min(100% - 48px, 1320px);
+            margin: 24px auto 0;
+            padding: 14px 0 4px;
+            border-top: 1px solid rgba(148, 163, 184, 0.24);
+            color: var(--muted, #64748b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .copyright-footer {
+                width: min(100% - 28px, 100%);
+                margin-top: 18px;
+                padding-top: 12px;
+            }
+        }
+</style>
+</head>
+<body>
+<div id="loading" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loadingTitle" class="loading-title">Sedang memuat ringkasan</p>
+        <p id="loadingSubtitle" class="loading-subtitle">Menyusun data marketplace, ecommerce, dan komunitas digital.</p>
+    </div>
+</div>
+
+<aside class="sidebar" aria-label="Navigasi dashboard">
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-item active" aria-current="page" aria-label="Ringkasan">
+            <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span class="nav-label">Ringkasan</span>
+        </a>
+        <a href="/facebook/" class="nav-item" aria-label="Facebook">
+            <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+            <span class="nav-label">Facebook</span>
+        </a>
+        <a href="/tokopedia/" class="nav-item" aria-label="Tokopedia">
+            <span class="nav-icon nav-icon-tokopedia" aria-hidden="true"></span>
+            <span class="nav-label">Tokopedia</span>
+        </a>
+        <a href="/shopee/" class="nav-item" aria-label="Shopee">
+            <span class="nav-icon nav-icon-shopee" aria-hidden="true"></span>
+            <span class="nav-label">Shopee</span>
+        </a>
+        <a href="/lazada/" class="nav-item" aria-label="Lazada">
+            <span class="nav-icon nav-icon-lazada" aria-hidden="true"></span>
+            <span class="nav-label">Lazada</span>
+        </a>
+        <a href="/blibli/" class="nav-item" aria-label="Blibli">
+            <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+            <span class="nav-label">Blibli</span>
+        </a>
+            <a href="/grabfood/" class="nav-item" aria-label="Dashboard GrabFood">
+                <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+                <span class="nav-label">GrabFood</span>
+            </a>
+    </nav>
+</aside>
+
+<main class="main-stage">
+    <div class="page-shell">
+        <section class="hero page-motion">
+            <h1>Ringkasan Aktivitas Pelaku Usaha Digital Sulawesi Tengah</h1>
+            <p>Analisis gabungan data Tokopedia, Shopee, Lazada, Blibli, Facebook Marketplace, Grup Komunitas Facebook dan Grabfood.</p>
+        </section>
+
+        <section class="filter-panel page-motion" style="--delay: 70ms;" aria-label="Filter global">
+            <details class="filter-menu">
+                <summary class="filter-trigger">
+                    <span class="filter-trigger-main">
+                        <span class="filter-title">Platform</span>
+                        <span id="platformFilterLabel" class="filter-count">Semua</span>
+                    </span>
+                    <span class="filter-value">Pilih</span>
+                </summary>
+                <div id="platformFilterOptions" class="filter-dropdown"></div>
+            </details>
+            <details class="filter-menu">
+                <summary class="filter-trigger">
+                    <span class="filter-trigger-main">
+                        <span class="filter-title">Kabupaten/Kota</span>
+                        <span id="locationFilterLabel" class="filter-count">Semua</span>
+                    </span>
+                    <span class="filter-value">Pilih</span>
+                </summary>
+                <div id="locationFilterOptions" class="filter-dropdown"></div>
+            </details>
+            <details class="filter-menu">
+                <summary class="filter-trigger">
+                    <span class="filter-trigger-main">
+                        <span class="filter-title">Kategori</span>
+                        <span id="categoryFilterLabel" class="filter-count">Semua</span>
+                    </span>
+                    <span class="filter-value">Pilih</span>
+                </summary>
+                <div id="categoryFilterOptions" class="filter-dropdown"></div>
+            </details>
+            <div class="filter-actions">
+                <button id="applyFilter" class="apply-button" type="button">Terapkan Filter</button>
+                <button id="resetFilter" class="reset-button" type="button">Reset Filter</button>
+            </div>
+        </section>
+
+        <div id="errorMessage" class="toast" role="status">Data belum tersedia.</div>
+
+        <section class="section page-motion" style="--delay: 120ms;" aria-label="KPI utama">
+            <div class="kpi-grid">
+                <article class="stat-card" style="--accent: var(--facebook);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Total Produk/Listing">i</button>
+                        <div class="tooltip-content">Jumlah produk ecommerce dan listing Facebook Marketplace berdasarkan filter yang sedang aktif.</div>
+                    </div>
+                    <div class="stat-top"><span>Total Produk/Listing</span></div>
+                    <h2 id="totalListings" class="stat-number">0</h2>
+                </article>
+                <article class="stat-card" style="--accent: var(--community);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Total Toko/Akun">i</button>
+                        <div class="tooltip-content">Gabungan toko ecommerce, akun Facebook Marketplace, dan akun komunitas. Komunitas tetap memakai basis Kota Palu.</div>
+                    </div>
+                    <div class="stat-top"><span>Total Toko/Akun</span></div>
+                    <h2 id="totalAccounts" class="stat-number">0</h2>
+                </article>
+                <article class="stat-card" style="--accent: var(--tokopedia);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Produk per Toko/Akun">i</button>
+                        <div class="tooltip-content">Rasio produk atau listing terhadap total toko/akun pada data yang sedang ditampilkan.</div>
+                    </div>
+                    <div class="stat-top"><span>Produk per Toko/Akun</span></div>
+                    <h2 id="listingPerAccount" class="stat-number">0</h2>
+                </article>
+                <article class="stat-card" style="--accent: var(--shopee);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Platform Produk Terbanyak">i</button>
+                        <div class="tooltip-content">Platform dengan jumlah produk atau listing paling besar berdasarkan filter yang dipilih.</div>
+                    </div>
+                    <div class="stat-top"><span>Platform Produk Terbanyak</span></div>
+                    <h2 id="topProductPlatform" class="stat-number">-</h2>
+                </article>
+                <article class="stat-card" style="--accent: var(--blibli);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Platform Toko/Akun Terbanyak">i</button>
+                        <div class="tooltip-content">Platform dengan jumlah toko ecommerce, akun marketplace, atau akun komunitas paling besar.</div>
+                    </div>
+                    <div class="stat-top"><span>Platform Toko/Akun Terbanyak</span></div>
+                    <h2 id="topAccountPlatform" class="stat-number">-</h2>
+                </article>
+                <article class="stat-card" style="--accent: var(--warning);">
+                    <div class="info-tooltip stat-info">
+                        <button type="button" class="info-button" aria-label="Informasi Lokasi Dominan">i</button>
+                        <div class="tooltip-content">Kabupaten/kota dengan konsentrasi toko atau akun tertinggi pada data yang sedang ditampilkan.</div>
+                    </div>
+                    <div class="stat-top"><span>Lokasi Dominan</span></div>
+                    <h2 id="topLocation" class="stat-number">-</h2>
+                </article>
+            </div>
+        </section>
+
+        <section class="section page-motion" style="--delay: 180ms;">
+            <div class="section-heading">
+                <div>
+                    <h2>Perbandingan Platform</h2>
+                    <p>Komposisi aktivitas marketplace dan ecommerce berdasarkan filter global.</p>
+                </div>
+            </div>
+            <div class="grid-2">
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Komposisi Produk/Listing per Platform</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menunjukkan perbandingan jumlah produk atau listing dari setiap platform ecommerce dan marketplace berdasarkan filter yang dipilih.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box"><canvas id="productPlatformChart"></canvas></div>
+                </article>
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Komposisi Toko/Akun per Platform</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menunjukkan perbandingan jumlah toko ecommerce, akun marketplace, atau akun komunitas dari setiap platform berdasarkan filter yang dipilih.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box"><canvas id="accountPlatformChart"></canvas></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section page-motion" style="--delay: 240ms;">
+            <div class="section-heading">
+                <div>
+                    <h2>Kategori dan Wilayah</h2>
+                    <p>Top kategori dan sebaran toko/akun menurut kabupaten/kota untuk data ecommerce dan marketplace.</p>
+                </div>
+            </div>
+            <div class="grid-2">
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Top 10 Kategori Berdasarkan Jumlah Toko/Akun</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menampilkan kategori dengan jumlah toko atau akun terbanyak. Grafik ini membantu melihat jenis usaha yang paling dominan.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box"><canvas id="categoryChart"></canvas></div>
+                </article>
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Sebaran Toko/Akun Menurut Kabupaten/Kota</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menunjukkan sebaran toko atau akun menurut wilayah. Grafik ini digunakan untuk melihat konsentrasi aktivitas digital di setiap kabupaten/kota.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box"><canvas id="locationChart"></canvas></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="grabfood-section page-motion" style="--delay: 300ms;" aria-label="Ringkasan Merchant GrabFood">
+            <div class="grabfood-heading">
+                <div>
+                    <h2>Ringkasan Merchant GrabFood</h2>
+                    <p>Sebaran merchant online food delivery berdasarkan lokasi, status operasional, dan kabupaten/kota.</p>
+                </div>
+                <span class="grabfood-badge">Online Food Delivery</span>
+            </div>
+
+            <div class="grabfood-kpi-grid">
+                <article class="grabfood-mini-card">
+                    <p class="grabfood-mini-label">Total Merchant GrabFood</p>
+                    <p id="grabfoodTotalMerchant" class="grabfood-mini-value">0</p>
+                </article>
+                <article class="grabfood-mini-card">
+                    <p class="grabfood-mini-label">Merchant Buka</p>
+                    <p id="grabfoodOpenMerchant" class="grabfood-mini-value">0</p>
+                </article>
+                <article class="grabfood-mini-card">
+                    <p class="grabfood-mini-label">Kab/Kota Terdata</p>
+                    <p id="grabfoodRegionCount" class="grabfood-mini-value">0</p>
+                </article>
+                <article class="grabfood-mini-card">
+                    <p class="grabfood-mini-label">Lokasi Dominan Merchant</p>
+                    <p id="grabfoodDominantLocation" class="grabfood-mini-value">-</p>
+                </article>
+            </div>
+
+            <div class="grabfood-content-grid">
+                <article class="grabfood-panel">
+                    <div class="grabfood-panel-header">
+                        <h3>Sebaran Titik Merchant GrabFood</h3>
+                        <a class="grabfood-action" href="/grabfood/">Lihat Dashboard GrabFood</a>
+                    </div>
+                    <div id="grabfoodMiniMap"></div>
+                    <p id="grabfoodMapNote" class="grabfood-note">Menyiapkan peta merchant online food delivery.</p>
+                </article>
+                <div class="grabfood-chart-grid">
+                    <article class="grabfood-panel">
+                        <div class="grabfood-panel-header">
+                            <h3>Merchant GrabFood per Kabupaten/Kota</h3>
+                        </div>
+                        <div class="grabfood-chart-box"><canvas id="grabfoodLocationChart"></canvas></div>
+                    </article>
+                    <article class="grabfood-panel">
+                        <div class="grabfood-panel-header">
+                            <h3>Status Operasional Merchant GrabFood</h3>
+                        </div>
+                        <div class="grabfood-chart-box"><canvas id="grabfoodStatusChart"></canvas></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section page-motion" style="--delay: 360ms;">
+            <div class="section-heading">
+                <div>
+                    <h2>Analisis Harga</h2>
+                    <p>Harga ekstrem perlu diperiksa karena dapat berasal dari kesalahan input, produk bundling, atau hasil scraping yang belum bersih.</p>
+                </div>
+            </div>
+            <div class="grid-2">
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Distribusi Produk Berdasarkan Rentang Harga</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menampilkan sebaran produk berdasarkan kelompok harga. Grafik ini membantu melihat mayoritas produk berada pada rentang harga tertentu.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box short"><canvas id="priceRangeChart"></canvas></div>
+                </article>
+                <article class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Median Harga Produk per Platform</h3>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menunjukkan nilai tengah harga produk pada setiap platform. Median digunakan agar hasil tidak terlalu dipengaruhi oleh harga ekstrem.</div>
+                        </div>
+                    </div>
+                    <div class="chart-box short"><canvas id="medianPriceChart"></canvas></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section page-motion" style="--delay: 420ms;">
+            <div class="section-heading">
+                <div>
+                    <h2>Perbandingan Pelaku Usaha Digital Basis Kota Palu</h2>
+                    <p>Perbandingan ini hanya menggunakan basis Kota Palu karena data komunitas berasal dari grup Facebook aktif di Kota Palu.</p>
+                    <p class="muted-note">Perbandingan dengan komunitas hanya dapat digunakan sebagai gambaran aktivitas digital berbasis Kota Palu.</p>
+                </div>
+            </div>
+            <article class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">Proporsi Pelaku Usaha: Marketplace Palu vs Komunitas Palu</h3>
+                    <div class="panel-actions">
+                        <span class="panel-note">Basis Kota Palu</span>
+                        <div class="info-tooltip">
+                            <button type="button" class="info-button" aria-label="Informasi chart">i</button>
+                            <div class="tooltip-content">Menunjukkan perbandingan proporsi pelaku usaha dan bukan pelaku usaha pada Facebook Marketplace dan Komunitas dengan basis Kota Palu. Perbandingan komunitas menggunakan basis Kota Palu karena data komunitas berasal dari grup Facebook aktif di Kota Palu.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-box short"><canvas id="paluComparisonChart"></canvas></div>
+            </article>
+        </section>
+
+        <section class="section page-motion" style="--delay: 480ms;">
+            <div class="section-heading">
+                <div>
+                    <h2>Tabel Ringkasan Platform</h2>
+                    <p>Ringkasan produk/listing, toko/akun, kategori dominan, dan lokasi dominan tiap platform.</p>
+                </div>
+                <div class="info-tooltip">
+                    <button type="button" class="info-button" aria-label="Informasi tabel ringkasan">i</button>
+                    <div class="tooltip-content">Merangkum performa tiap platform berdasarkan jumlah produk/listing, toko/akun, rasio aktivitas, kategori dominan, lokasi dominan, dan catatan data.</div>
+                </div>
+            </div>
+            <article class="panel">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th class="numeric">Jumlah Produk/Listing</th>
+                                <th class="numeric">Jumlah Toko/Akun</th>
+                                <th class="numeric">Produk per Toko/Akun</th>
+                                <th>Kategori Dominan</th>
+                                <th>Lokasi Dominan</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="platformSummaryBody">
+                            <tr><td colspan="7">Data belum tersedia.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </div>
+    <footer class="copyright-footer" aria-label="Copyright">&copy; BPS SULTENG 2026</footer>
+</main>
+
+<script>
+const platformColors = {
+    'Tokopedia': '#00AA5B',
+    'Shopee': '#EE4D2D',
+    'Lazada': '#1E3A8A',
+    'Blibli': '#00AEEF',
+    'Facebook Marketplace': '#1877F2',
+    'Facebook Komunitas': '#0F766E',
+    'GrabFood': '#00B14F',
+}
+
+const platformOrder = ['Tokopedia', 'Shopee', 'Lazada', 'Blibli', 'Facebook Marketplace', 'Facebook Komunitas']
+const chartState = {}
+let grabfoodMap = null
+let grabfoodLayer = null
+
+const grabfoodStatusColors = {
+    'Buka': '#16A34A',
+    'Tutup': '#DC2626',
+    'Tutup Sementara': '#F59E0B',
+    'Jadwal Tersedia': '#2563EB',
+    'Tutup Sementara/Jadwal Tersedia': '#F59E0B',
+    'Tidak Diketahui': '#94A3B8',
+}
+
+const chartValueLabels = {
+    id: 'chartValueLabels',
+    afterDatasetsDraw(chart, args, pluginOptions) {
+        const { ctx, chartArea } = chart
+        if (!chartArea) return
+        ctx.save()
+        ctx.font = '700 11px Inter, Segoe UI, sans-serif'
+        ctx.fillStyle = '#0f172a'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex)
+            if (meta.hidden) return
+            const doughnutOffsets = { left: 0, right: 0 }
+
+            meta.data.forEach((element, index) => {
+                const value = toNumber(dataset.data[index])
+                if (!value) return
+                const currentLabel = chart.data.labels[index]
+                const hiddenLabels = pluginOptions?.hiddenLabels || []
+                const normalizedLabel = String(currentLabel || '').trim().toLowerCase()
+                if (hiddenLabels.some(label => String(label || '').trim().toLowerCase() === normalizedLabel)) return
+
+                if (chart.config.type === 'doughnut') {
+                    const total = dataset.data.reduce((sum, item) => sum + toNumber(item), 0)
+                    if (!total) return
+                    const share = value / total
+                    const point = element.tooltipPosition()
+                    const text = formatCompactNumber(value)
+                    if (share < 0.045) {
+                        const arrowOnlyForLabels = pluginOptions?.arrowOnlyForLabels || []
+                        const shouldShowArrow = !arrowOnlyForLabels.length || arrowOnlyForLabels.includes(currentLabel)
+                        if (pluginOptions?.hideSmallDoughnutLabels && !shouldShowArrow) return
+                        const props = element.getProps(['x', 'y', 'startAngle', 'endAngle', 'outerRadius'], true)
+                        const angle = (props.startAngle + props.endAngle) / 2
+                        const startX = props.x + Math.cos(angle) * props.outerRadius
+                        const startY = props.y + Math.sin(angle) * props.outerRadius
+                        const endX = props.x + Math.cos(angle) * (props.outerRadius + 22)
+                        const endY = props.y + Math.sin(angle) * (props.outerRadius + 22)
+                        const side = Math.cos(angle) >= 0 ? 'right' : 'left'
+                        const sideDirection = side === 'right' ? 1 : -1
+                        const labelOffset = (doughnutOffsets[side]++ % 4) * 16
+                        const staggeredY = Math.min(Math.max(endY + labelOffset, chartArea.top + 12), chartArea.bottom - 12)
+                        const labelX = Math.min(Math.max(endX + (sideDirection * 26), chartArea.left + 18), chartArea.right - 18)
+                        ctx.strokeStyle = 'rgba(15, 23, 42, 0.42)'
+                        ctx.lineWidth = 1.4
+                        ctx.beginPath()
+                        ctx.moveTo(startX, startY)
+                        ctx.lineTo(endX, endY)
+                        ctx.lineTo(labelX, staggeredY)
+                        ctx.stroke()
+                        ctx.textAlign = side === 'right' ? 'left' : 'right'
+                        ctx.fillStyle = '#0f172a'
+                        ctx.fillText(text, labelX + (sideDirection * 4), staggeredY)
+                        return
+                    }
+                    ctx.fillStyle = '#ffffff'
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.28)'
+                    ctx.lineWidth = 3
+                    ctx.strokeText(text, point.x, point.y)
+                    ctx.fillText(text, point.x, point.y)
+                    ctx.fillStyle = '#0f172a'
+                    return
+                }
+
+                const point = element.tooltipPosition()
+                const text = pluginOptions?.percent
+                    ? `${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`
+                    : formatCompactNumber(value)
+                const isHorizontal = chart.options.indexAxis === 'y'
+                const barWidth = isHorizontal ? Math.abs(point.x - chart.scales.x.getPixelForValue(0)) : element.width
+                const barHeight = isHorizontal ? element.height : Math.abs(chart.scales.y.getPixelForValue(0) - point.y)
+                const forceArrow = pluginOptions?.smallValueArrows
+                const forceLabel = pluginOptions?.always
+                if (!forceLabel && ((isHorizontal && barWidth < 54) || (!isHorizontal && barHeight < 30))) {
+                    if (!forceArrow) return
+                    const arrowOnlyForLabels = pluginOptions?.arrowOnlyForLabels || []
+                    if (arrowOnlyForLabels.length && !arrowOnlyForLabels.includes(currentLabel)) return
+                    const direction = datasetIndex % 2 === 0 ? 1 : -1
+                    const labelX = Math.min(Math.max(point.x + (direction * 24), chartArea.left + 18), chartArea.right - 18)
+                    const labelY = Math.min(Math.max(point.y - 18, chartArea.top + 12), chartArea.bottom - 12)
+                    ctx.strokeStyle = 'rgba(15, 23, 42, 0.42)'
+                    ctx.lineWidth = 1.3
+                    ctx.beginPath()
+                    ctx.moveTo(point.x, point.y)
+                    ctx.lineTo(labelX, labelY)
+                    ctx.stroke()
+                    ctx.textAlign = 'center'
+                    ctx.fillText(text, labelX, labelY - 4)
+                    return
+                }
+                ctx.textAlign = isHorizontal ? 'left' : 'center'
+                const x = isHorizontal ? Math.min(point.x + 18, chartArea.right - 18) : point.x
+                const y = isHorizontal ? point.y : Math.max(point.y - 12, chartArea.top + 12)
+                ctx.fillText(text, x, y)
+            })
+        })
+        ctx.restore()
+    },
+}
+
+Chart.register(chartValueLabels)
+
+const toNumber = value => Number(value || 0)
+const formatNumber = value => toNumber(value).toLocaleString('id-ID')
+const formatDecimal = value => toNumber(value).toLocaleString('id-ID', { maximumFractionDigits: 1 })
+const formatCurrency = value => `Rp${toNumber(value).toLocaleString('id-ID', { maximumFractionDigits: 0 })}`
+const formatCompactNumber = value => Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(toNumber(value))
+
+function setLoadingMessage(title, subtitle) {
+    document.getElementById('loadingTitle').textContent = title
+    document.getElementById('loadingSubtitle').textContent = subtitle
+}
+
+function animateText(id, value, formatter = formatNumber) {
+    const element = document.getElementById(id)
+    if (!element) return
+    const target = toNumber(value)
+    const current = Number(element.dataset.rawValue || 0)
+    element.dataset.rawValue = target
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900
+
+    if (!duration) {
+        element.textContent = formatter(target)
+        return
+    }
+
+    const start = performance.now()
+    const step = now => {
+        const progress = Math.min((now - start) / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        const next = current + ((target - current) * eased)
+        element.textContent = formatter(next)
+        if (progress < 1) {
+            requestAnimationFrame(step)
+        } else {
+            element.textContent = formatter(target)
+        }
+    }
+    requestAnimationFrame(step)
+}
+
+function setText(id, value) {
+    const element = document.getElementById(id)
+    if (element) element.textContent = value
+}
+
+function getSelectedValues(containerId) {
+    return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(input => input.value)
+}
+
+function summarizeSelection(values) {
+    if (!values.length) return 'Semua'
+    if (values.length === 1) return values[0]
+    return `${values.length} dipilih`
+}
+
+function updateFilterLabels() {
+    setText('platformFilterLabel', summarizeSelection(getSelectedValues('platformFilterOptions')))
+    setText('locationFilterLabel', summarizeSelection(getSelectedValues('locationFilterOptions')))
+    setText('categoryFilterLabel', summarizeSelection(getSelectedValues('categoryFilterOptions')))
+}
+
+function buildSummaryUrl(baseUrl = '/api/ecommerce/summary/') {
+    const params = new URLSearchParams()
+    getSelectedValues('platformFilterOptions').forEach(value => params.append('platform', value))
+    getSelectedValues('locationFilterOptions').forEach(value => params.append('lokasi', value))
+    getSelectedValues('categoryFilterOptions').forEach(value => params.append('kategori', value))
+    const query = params.toString()
+    return `${baseUrl}${query ? `?${query}` : ''}`
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Gagal memuat ${url}`)
+    return response.json()
+}
+
+function populateFilterOptions(id, rows, selectedValues = []) {
+    const container = document.getElementById(id)
+    const selected = new Set(selectedValues)
+    container.innerHTML = ''
+    ;(rows || []).forEach(row => {
+        const value = row.value
+        if (!value) return
+        const option = document.createElement('label')
+        option.className = 'filter-option'
+
+        const input = document.createElement('input')
+        input.type = 'checkbox'
+        input.value = value
+        input.checked = selected.has(value)
+
+        const text = document.createElement('span')
+        text.textContent = value
+
+        option.appendChild(input)
+        option.appendChild(text)
+        container.appendChild(option)
+    })
+}
+
+function destroyChart(key) {
+    if (chartState[key]) {
+        chartState[key].destroy()
+        delete chartState[key]
+    }
+}
+
+function renderChart(key, config) {
+    destroyChart(key)
+    const canvas = document.getElementById(key)
+    chartState[key] = new Chart(canvas, config)
+}
+
+function commonOptions(extra = {}) {
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 650, easing: 'easeOutQuart' },
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+            tooltip: { mode: 'index', intersect: false },
+        },
+    }
+
+    return {
+        ...baseOptions,
+        ...extra,
+        plugins: {
+            ...baseOptions.plugins,
+            ...(extra.plugins || {}),
+        },
+    }
+}
+
+function rowsByPlatform(rows) {
+    const map = new Map()
+    ;(rows || []).forEach(row => map.set(row.marketplace, row))
+    return platformOrder
+        .filter(platform => map.has(platform))
+        .map(platform => map.get(platform))
+}
+
+function hasPositiveValue(values) {
+    return (values || []).some(value => toNumber(value) > 0)
+}
+
+function communitySummary(data) {
+    return data.facebook?.community?.summary || {}
+}
+
+function communityOverviewRows(data) {
+    return data.facebook?.community?.overview || []
+}
+
+function getTopLocation(data) {
+    const locationTotals = {}
+    ;(data.lokasi || []).forEach(row => {
+        const key = row.lokasi || 'Tidak diketahui'
+        locationTotals[key] = (locationTotals[key] || 0) + toNumber(row.jumlah_toko)
+    })
+    return Object.entries(locationTotals).sort((a, b) => b[1] - a[1])[0]
+}
+
+function renderKpis(data) {
+    const overview = (data.overview || [])[0] || {}
+    const marketplaceRows = data.marketplace || []
+    const community = communitySummary(data)
+    const communitySellerAccounts = toNumber(community.total_pedagang)
+    const communityPosts = toNumber(community.total_post)
+    const totalListings = toNumber(overview.total_produk)
+    const totalAccounts = toNumber(overview.total_toko) + communitySellerAccounts
+    const listingPerAccount = totalAccounts ? totalListings / totalAccounts : 0
+    const topProducts = [...marketplaceRows].sort((a, b) => toNumber(b.total_produk) - toNumber(a.total_produk))[0]
+    const accountRows = [
+        ...marketplaceRows.map(row => ({ platform: row.marketplace, total: toNumber(row.total_toko) })),
+        { platform: 'Facebook Komunitas', total: communitySellerAccounts },
+    ]
+    const topAccounts = accountRows.sort((a, b) => b.total - a.total)[0]
+
+    const topLocation = getTopLocation(data)
+
+    animateText('totalListings', totalListings)
+    animateText('totalAccounts', totalAccounts)
+    animateText('listingPerAccount', listingPerAccount, formatDecimal)
+    setText('topProductPlatform', topProducts ? topProducts.marketplace : '-')
+    setText('topAccountPlatform', topAccounts ? topAccounts.platform : '-')
+    setText('topLocation', topLocation ? topLocation[0] : '-')
+}
+
+function renderPlatformCharts(data) {
+    const marketplaceRows = rowsByPlatform(data.marketplace || [])
+    const community = communitySummary(data)
+    const accountLabels = [...marketplaceRows.map(row => row.marketplace), 'Facebook Komunitas']
+    const accountValues = [...marketplaceRows.map(row => toNumber(row.total_toko)), toNumber(community.total_pedagang)]
+    const productLabels = marketplaceRows.map(row => row.marketplace)
+    const productValues = marketplaceRows.map(row => toNumber(row.total_produk))
+    const safeProductLabels = hasPositiveValue(productValues) ? productLabels : ['Data belum tersedia']
+    const safeProductValues = hasPositiveValue(productValues) ? productValues : [1]
+    const safeAccountLabels = hasPositiveValue(accountValues) ? accountLabels : ['Data belum tersedia']
+    const safeAccountValues = hasPositiveValue(accountValues) ? accountValues : [1]
+
+    renderChart('productPlatformChart', {
+        type: 'doughnut',
+        data: {
+            labels: safeProductLabels,
+            datasets: [{
+                data: safeProductValues,
+                backgroundColor: safeProductLabels.map(label => platformColors[label] || '#CBD5E1'),
+                borderWidth: 0,
+            }],
+        },
+        options: commonOptions({ cutout: '62%' }),
+    })
+
+    renderChart('accountPlatformChart', {
+        type: 'doughnut',
+        data: {
+            labels: safeAccountLabels,
+            datasets: [{
+                data: safeAccountValues,
+                backgroundColor: safeAccountLabels.map(label => platformColors[label] || '#CBD5E1'),
+                borderWidth: 0,
+            }],
+        },
+        options: commonOptions({
+            cutout: '62%',
+            plugins: {
+                chartValueLabels: { hideSmallDoughnutLabels: true, arrowOnlyForLabels: ['Blibli'] },
+            },
+        }),
+    })
+}
+
+function renderCategoryChart(data) {
+    const rows = data.toko_kategori || []
+    const labels = rows.map(row => row.kategori || 'Tidak diketahui')
+    const values = rows.map(row => toNumber(row.jumlah_toko))
+    renderChart('categoryChart', {
+        type: 'bar',
+        data: {
+            labels: hasPositiveValue(values) ? labels : ['Data belum tersedia'],
+            datasets: [{
+                label: 'Toko/Akun',
+                data: hasPositiveValue(values) ? values : [0],
+                backgroundColor: '#1877F2',
+                borderRadius: 10,
+            }],
+        },
+        options: commonOptions({
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, grid: { color: '#eef2f7' } },
+                y: { grid: { display: false } },
+            },
+        }),
+    })
+}
+
+function renderLocationChart(data) {
+    const rows = data.lokasi || []
+    const locationTotals = {}
+    rows.forEach(row => {
+        locationTotals[row.lokasi] = (locationTotals[row.lokasi] || 0) + toNumber(row.jumlah_toko)
+    })
+    const locations = Object.entries(locationTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(entry => entry[0])
+    const blibliLocations = rows
+        .filter(row => row.marketplace === 'Blibli' && (toNumber(row.jumlah_toko) || toNumber(row.jumlah_produk)))
+        .map(row => row.lokasi)
+    blibliLocations.forEach(location => {
+        if (location && !locations.includes(location)) locations.push(location)
+    })
+    const safeLocations = locations.length ? locations : ['Data belum tersedia']
+
+    const datasets = platformOrder
+        .filter(platform => platform !== 'Facebook Komunitas')
+        .map(platform => ({
+            label: platform,
+            data: safeLocations.map(location => {
+                return rows
+                    .filter(row => row.lokasi === location && row.marketplace === platform)
+                    .reduce((sum, row) => sum + toNumber(row.jumlah_toko), 0)
+            }),
+            backgroundColor: platformColors[platform],
+            borderRadius: 8,
+            minBarLength: 4,
+        }))
+
+    renderChart('locationChart', {
+        type: 'bar',
+        data: { labels: safeLocations, datasets },
+        options: commonOptions({
+            plugins: {
+                chartValueLabels: { hiddenLabels: ['Palu', 'Kota Palu'] },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: context => {
+                            const row = rows.find(item => item.lokasi === context.label && item.marketplace === context.dataset.label)
+                            const stores = row ? toNumber(row.jumlah_toko) : toNumber(context.raw)
+                            const products = row ? toNumber(row.jumlah_produk) : 0
+                            const productInfo = products ? `, ${formatNumber(products)} produk/listing` : ''
+                            return `${context.dataset.label}: ${formatNumber(stores)} toko/akun${productInfo}`
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, grid: { color: '#eef2f7' } },
+            },
+        }),
+    })
+}
+
+function renderPriceCharts(data) {
+    const priceRows = data.harga || []
+    const medianRows = data.price_stats?.marketplace || []
+    const priceValues = priceRows.map(row => toNumber(row.jumlah))
+    const medianValues = medianRows.map(row => toNumber(row.harga_median))
+
+    renderChart('priceRangeChart', {
+        type: 'bar',
+        data: {
+            labels: hasPositiveValue(priceValues) ? priceRows.map(row => row.rentang_harga) : ['Data belum tersedia'],
+            datasets: [{
+                label: 'Produk',
+                data: hasPositiveValue(priceValues) ? priceValues : [0],
+                backgroundColor: '#F59E0B',
+                borderRadius: 8,
+            }],
+        },
+        options: commonOptions({
+            scales: {
+                x: { ticks: { maxRotation: 45, minRotation: 0 }, grid: { display: false } },
+                y: { beginAtZero: true, grid: { color: '#eef2f7' } },
+            },
+        }),
+    })
+
+    renderChart('medianPriceChart', {
+        type: 'bar',
+        data: {
+            labels: hasPositiveValue(medianValues) ? medianRows.map(row => row.marketplace) : ['Data belum tersedia'],
+            datasets: [{
+                label: 'Median harga',
+                data: hasPositiveValue(medianValues) ? medianValues : [0],
+                backgroundColor: hasPositiveValue(medianValues) ? medianRows.map(row => platformColors[row.marketplace] || '#1877F2') : ['#CBD5E1'],
+                borderRadius: 10,
+            }],
+        },
+        options: commonOptions({
+            plugins: {
+                legend: { display: false },
+                chartValueLabels: { always: true },
+                tooltip: { callbacks: { label: ctx => `Median harga: ${formatCurrency(ctx.raw)}` } },
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true, ticks: { callback: value => formatCurrency(value) }, grid: { color: '#eef2f7' } },
+            },
+        }),
+    })
+}
+
+function sumStatus(rows, expected) {
+    return (rows || [])
+        .filter(row => String(row.status || row.kategori_final || '').toLowerCase() === expected)
+        .reduce((sum, row) => sum + toNumber(row.jumlah), 0)
+}
+
+function renderPaluComparison(data) {
+    const marketplacePaluRows = data.facebook?.marketplace?.palu_status || []
+    const communityRows = communityOverviewRows(data)
+    const marketplaceSeller = sumStatus(marketplacePaluRows, 'pedagang')
+    const marketplaceNonSeller = marketplacePaluRows.reduce((sum, row) => sum + toNumber(row.jumlah), 0) - marketplaceSeller
+    const communitySeller = sumStatus(communityRows, 'pedagang')
+    const communityNonSeller = sumStatus(communityRows, 'non-dagang')
+    const marketplaceTotal = marketplaceSeller + marketplaceNonSeller
+    const communityTotal = communitySeller + communityNonSeller
+    const percent = (value, total) => total ? (value * 100 / total) : 0
+
+    renderChart('paluComparisonChart', {
+        type: 'bar',
+        data: {
+            labels: ['Facebook Marketplace Kota Palu', 'Facebook Komunitas Kota Palu'],
+            datasets: [
+                {
+                    label: 'Pelaku Usaha',
+                    data: [
+                        percent(marketplaceSeller, marketplaceTotal),
+                        percent(communitySeller, communityTotal),
+                    ],
+                    rawCounts: [marketplaceSeller, communitySeller],
+                    backgroundColor: '#0F766E',
+                    borderRadius: 8,
+                },
+                {
+                    label: 'Bukan Pelaku Usaha',
+                    data: [
+                        percent(marketplaceNonSeller, marketplaceTotal),
+                        percent(communityNonSeller, communityTotal),
+                    ],
+                    rawCounts: [marketplaceNonSeller, communityNonSeller],
+                    backgroundColor: '#CBD5E1',
+                    borderRadius: 8,
+                },
+            ],
+        },
+        options: commonOptions({
+            indexAxis: 'y',
+            scales: {
+                x: { stacked: true, beginAtZero: true, max: 100, ticks: { callback: value => `${value}%` }, grid: { color: '#eef2f7' } },
+                y: { stacked: true, grid: { display: false } },
+            },
+            plugins: {
+                legend: { position: 'bottom' },
+                chartValueLabels: { percent: true },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const value = context.dataset.rawCounts?.[context.dataIndex] || 0
+                            const share = toNumber(context.raw).toLocaleString('id-ID', { maximumFractionDigits: 1 })
+                            return `${context.dataset.label}: ${formatNumber(value)} (${share}%)`
+                        },
+                    },
+                },
+            },
+        }),
+    })
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+    }[char]))
+}
+
+function grabfoodStatusColor(status) {
+    if (grabfoodStatusColors[status]) return grabfoodStatusColors[status]
+    const normalized = String(status || '').toLowerCase()
+    if (normalized.includes('buka')) return '#16A34A'
+    if (normalized.includes('jadwal')) return '#2563EB'
+    if (normalized.includes('sementara')) return '#F59E0B'
+    if (normalized.includes('tutup')) return '#DC2626'
+    return '#94A3B8'
+}
+
+function renderGrabFoodMap(rows) {
+    const mapElement = document.getElementById('grabfoodMiniMap')
+    if (!mapElement || !window.L) return
+
+    if (!grabfoodMap) {
+        grabfoodMap = L.map('grabfoodMiniMap', { scrollWheelZoom: false, zoomControl: true })
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(grabfoodMap)
+        grabfoodLayer = L.layerGroup().addTo(grabfoodMap)
+    }
+
+    grabfoodLayer.clearLayers()
+    const bounds = []
+    ;(rows || []).forEach(row => {
+        const lat = Number(row.latitude)
+        const lng = Number(row.longitude)
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+        const color = grabfoodStatusColor(row.status_label)
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="grabfood-marker" style="background:${color}"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+        })
+        const popup = `
+            <strong>${escapeHtml(row.merchant_name || 'Tanpa Nama')}</strong><br>
+            Kab/Kota: ${escapeHtml(row.kab_kota || 'Tidak Diketahui')}<br>
+            Status: ${escapeHtml(row.status_label || 'Tidak Diketahui')}
+        `
+        L.marker([lat, lng], { icon }).bindPopup(popup).addTo(grabfoodLayer)
+        bounds.push([lat, lng])
+    })
+
+    if (bounds.length) {
+        grabfoodMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 })
+        setText('grabfoodMapNote', `${formatNumber(bounds.length)} titik merchant GrabFood valid ditampilkan pada peta.`)
+    } else {
+        grabfoodMap.setView([-0.9003, 119.8780], 12)
+        setText('grabfoodMapNote', 'Belum ada titik valid. Peta diarahkan ke area Kota Palu.')
+    }
+
+    window.setTimeout(() => grabfoodMap.invalidateSize(), 120)
+}
+
+function renderGrabFoodCharts(grabfood) {
+    const regionRows = grabfood?.per_kab_kota || []
+    const statusRows = grabfood?.status_summary || []
+    const regionValues = regionRows.map(row => toNumber(row.jumlah))
+    const statusValues = statusRows.map(row => toNumber(row.jumlah))
+
+    renderChart('grabfoodLocationChart', {
+        type: 'bar',
+        data: {
+            labels: hasPositiveValue(regionValues) ? regionRows.map(row => row.kab_kota || 'Tidak Diketahui') : ['Data belum tersedia'],
+            datasets: [{
+                label: 'Merchant',
+                data: hasPositiveValue(regionValues) ? regionValues : [0],
+                backgroundColor: '#00B14F',
+                borderRadius: 8,
+            }],
+        },
+        options: commonOptions({
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => `${formatNumber(ctx.raw)} merchant` } },
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f7' } },
+                y: { grid: { display: false } },
+            },
+        }),
+    })
+
+    renderChart('grabfoodStatusChart', {
+        type: 'doughnut',
+        data: {
+            labels: hasPositiveValue(statusValues) ? statusRows.map(row => row.status_label || 'Tidak Diketahui') : ['Data belum tersedia'],
+            datasets: [{
+                data: hasPositiveValue(statusValues) ? statusValues : [1],
+                backgroundColor: hasPositiveValue(statusValues)
+                    ? statusRows.map(row => grabfoodStatusColor(row.status_label))
+                    : ['#CBD5E1'],
+                borderColor: '#ffffff',
+                borderWidth: 2,
+            }],
+        },
+        options: commonOptions({
+            cutout: '62%',
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+                tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatNumber(ctx.raw)} merchant` } },
+            },
+        }),
+    })
+}
+
+function renderGrabFoodSummary(data) {
+    const grabfood = data.grabfood || {}
+    const summary = grabfood.summary || {}
+    animateText('grabfoodTotalMerchant', summary.total_grabfood_merchant || 0)
+    animateText('grabfoodOpenMerchant', summary.grabfood_merchant_buka || 0)
+    animateText('grabfoodRegionCount', summary.grabfood_kab_kota_terdata || 0)
+    setText('grabfoodDominantLocation', summary.grabfood_lokasi_dominan || '-')
+    renderGrabFoodMap(grabfood.map_data || [])
+    renderGrabFoodCharts(grabfood)
+}
+
+function mapByPlatform(rows, field) {
+    const map = new Map()
+    ;(rows || []).forEach(row => map.set(row.marketplace, row[field]))
+    return map
+}
+
+function renderTable(data) {
+    const tbody = document.getElementById('platformSummaryBody')
+    const categoryMap = mapByPlatform(data.dominant_category, 'kategori')
+    const locationMap = mapByPlatform(data.dominant_location, 'lokasi')
+    const community = communitySummary(data)
+    const rows = rowsByPlatform(data.marketplace || []).map(row => ({
+        platform: row.marketplace,
+        listings: toNumber(row.total_produk),
+        accounts: toNumber(row.total_toko),
+        ratio: toNumber(row.total_toko) ? toNumber(row.total_produk) / toNumber(row.total_toko) : 0,
+        category: categoryMap.get(row.marketplace) || 'Data belum tersedia',
+        location: locationMap.get(row.marketplace) || 'Data belum tersedia',
+        note: row.marketplace === 'Facebook Marketplace'
+            ? 'Listing marketplace berbasis akun Facebook.'
+            : 'Toko ecommerce dengan produk dan harga terstruktur.',
+    }))
+
+    rows.push({
+        platform: 'Facebook Komunitas',
+        listings: toNumber(community.total_post),
+        accounts: toNumber(community.total_pedagang),
+        ratio: toNumber(community.total_pedagang) ? toNumber(community.total_post) / toNumber(community.total_pedagang) : 0,
+        category: 'Pelaku usaha / non-dagang',
+        location: 'Kota Palu',
+        note: 'Akun pedagang komunitas, basis Kota Palu.',
+    })
+
+    const grabfoodSummary = data.grabfood?.summary || {}
+    rows.push({
+        platform: 'GrabFood',
+        listings: '-',
+        accounts: toNumber(grabfoodSummary.total_grabfood_merchant),
+        ratio: '-',
+        category: 'Merchant Food Delivery',
+        location: grabfoodSummary.grabfood_lokasi_dominan || 'Data belum tersedia',
+        note: 'Data berupa merchant/restoran, bukan produk marketplace.',
+    })
+
+    tbody.innerHTML = rows.length
+        ? rows.map(row => `
+            <tr>
+                <td><span class="platform-cell"><span class="platform-dot" style="--dot: ${platformColors[row.platform] || '#1877F2'}"></span>${row.platform}</span></td>
+                <td class="numeric">${typeof row.listings === 'number' ? formatNumber(row.listings) : row.listings}</td>
+                <td class="numeric">${formatNumber(row.accounts)}</td>
+                <td class="numeric">${typeof row.ratio === 'number' ? formatDecimal(row.ratio) : row.ratio}</td>
+                <td>${row.category}</td>
+                <td>${row.location}</td>
+                <td><span class="note-text">${row.note}</span></td>
+            </tr>
+        `).join('')
+        : '<tr><td colspan="7">Data belum tersedia.</td></tr>'
+}
+
+function renderAll(data) {
+    document.getElementById('errorMessage').classList.remove('show')
+    renderKpis(data)
+    renderPlatformCharts(data)
+    renderCategoryChart(data)
+    renderLocationChart(data)
+    renderGrabFoodSummary(data)
+    renderPriceCharts(data)
+    renderPaluComparison(data)
+    renderTable(data)
+}
+
+function renderQuick(data) {
+    document.getElementById('errorMessage').classList.remove('show')
+    renderKpis(data)
+    renderPlatformCharts(data)
+    renderGrabFoodSummary(data)
+    renderTable(data)
+}
+
+async function loadDashboard() {
+    setLoadingMessage('Sedang memuat ringkasan', 'Menyusun data marketplace, ecommerce, dan komunitas digital.')
+    const loadingFallbackTimer = window.setTimeout(() => {
+        document.body.classList.add('ready')
+    }, 800)
+    try {
+        const selected = {
+            platform: getSelectedValues('platformFilterOptions'),
+            lokasi: getSelectedValues('locationFilterOptions'),
+            kategori: getSelectedValues('categoryFilterOptions'),
+        }
+        const quickData = await fetchJson(buildSummaryUrl('/api/ecommerce/summary/quick/'))
+        populateFilterOptions('platformFilterOptions', quickData.filter_options?.platform || [], selected.platform)
+        populateFilterOptions('locationFilterOptions', quickData.filter_options?.lokasi || [], selected.lokasi)
+        populateFilterOptions('categoryFilterOptions', quickData.filter_options?.kategori || [], selected.kategori)
+        updateFilterLabels()
+        renderQuick(quickData)
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('ready')
+
+        const data = await fetchJson(buildSummaryUrl())
+        populateFilterOptions('platformFilterOptions', data.filter_options?.platform || [], selected.platform)
+        populateFilterOptions('locationFilterOptions', data.filter_options?.lokasi || [], selected.lokasi)
+        populateFilterOptions('categoryFilterOptions', data.filter_options?.kategori || [], selected.kategori)
+        updateFilterLabels()
+        renderAll(data)
+    } catch (error) {
+        console.error(error)
+        window.clearTimeout(loadingFallbackTimer)
+        document.body.classList.add('ready')
+        const toast = document.getElementById('errorMessage')
+        toast.textContent = 'Data belum tersedia atau terjadi kendala saat memuat ringkasan.'
+        toast.classList.add('show')
+    }
+}
+
+function bindControls() {
+    ;['platformFilterOptions', 'locationFilterOptions', 'categoryFilterOptions'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateFilterLabels)
+    })
+    document.getElementById('applyFilter').addEventListener('click', () => {
+        document.querySelectorAll('.filter-menu[open]').forEach(menu => { menu.open = false })
+        updateFilterLabels()
+        loadDashboard()
+    })
+    document.getElementById('resetFilter').addEventListener('click', () => {
+        ;['platformFilterOptions', 'locationFilterOptions', 'categoryFilterOptions'].forEach(id => {
+            document.querySelectorAll(`#${id} input`).forEach(input => { input.checked = false })
+        })
+        document.querySelectorAll('.filter-menu[open]').forEach(menu => { menu.open = false })
+        updateFilterLabels()
+        loadDashboard()
+    })
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    bindControls()
+    loadDashboard()
+})
+</script>
+</body>
+</html>
