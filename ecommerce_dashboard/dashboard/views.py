@@ -1466,3 +1466,37 @@ def komunitas_intensitas(request):
 def debug_ecommerce(request):
     data = query_view("SELECT * FROM ecommerce_valid LIMIT 100")
     return JsonResponse(data, safe=False)
+
+
+def debug_database(request):
+    config = connection.settings_dict
+    table_names = ("tokopedia", "shopee", "lazada", "blibli", "ecommerce_valid")
+    response = {
+        "database": {
+            "engine": config.get("ENGINE"),
+            "host": config.get("HOST"),
+            "port": config.get("PORT"),
+            "name": config.get("NAME"),
+            "user": config.get("USER"),
+        },
+        "ok": False,
+        "counts": {},
+    }
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT DATABASE()")
+            response["database"]["current"] = cursor.fetchone()[0]
+
+            for table_name in table_names:
+                cursor.execute(f"SELECT COUNT(*) FROM `{table_name}`")
+                response["counts"][table_name] = cursor.fetchone()[0]
+
+        response["ok"] = True
+        return JsonResponse(response)
+    except Exception as error:
+        response["error"] = {
+            "type": error.__class__.__name__,
+            "message": str(error),
+        }
+        return JsonResponse(response, status=500)

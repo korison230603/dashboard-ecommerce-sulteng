@@ -66,4 +66,5 @@ urlpatterns = [
     # DEBUG
     # =====================
     path('api/debug/ecommerce/', views.debug_ecommerce),
+    path('api/debug/database/', views.debug_database),
 ]
