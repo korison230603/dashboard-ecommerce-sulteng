@@ -50,6 +50,19 @@ load_env_file(BASE_DIR.parent / ".env")
 load_env_file(BASE_DIR / ".env")
 
 
+IS_RAILWAY = any(
+    os.environ.get(name)
+    for name in (
+        "RAILWAY_PUBLIC_DOMAIN",
+        "RAILWAY_PROJECT_ID",
+        "RAILWAY_SERVICE_ID",
+        "RAILWAY_ENVIRONMENT_ID",
+        "RAILWAY_ENVIRONMENT_NAME",
+    )
+)
+RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -57,10 +70,22 @@ load_env_file(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-dev-secret-key-change-me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool("DJANGO_DEBUG", True)
+DEBUG = env_bool("DJANGO_DEBUG", not IS_RAILWAY)
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+default_allowed_hosts = ["localhost", "127.0.0.1"]
+default_csrf_trusted_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
+
+if IS_RAILWAY:
+    default_allowed_hosts.append(".up.railway.app")
+    default_csrf_trusted_origins.append("https://*.up.railway.app")
+
+if RAILWAY_PUBLIC_DOMAIN:
+    default_allowed_hosts.append(RAILWAY_PUBLIC_DOMAIN)
+    default_csrf_trusted_origins.append(f"https://{RAILWAY_PUBLIC_DOMAIN}")
+
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", default_allowed_hosts)
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", default_csrf_trusted_origins)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
