@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akses Terbatas - Dashboard Pelaku Usaha Digital</title>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e5e7eb;
+            --shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+            --facebook: #1877f2;
+            --sidebar-width: 96px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Manrope, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 18% 12%, rgba(24, 119, 242, 0.10), transparent 30%),
+                radial-gradient(circle at 84% 18%, rgba(0, 170, 91, 0.10), transparent 26%),
+                var(--bg);
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar-width);
+            z-index: 120;
+            padding: 16px 12px;
+            background: linear-gradient(180deg, #0b1728 0%, #10213a 52%, #0b1624 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 16px 0 34px rgba(15, 23, 42, 0.14);
+        }
+
+        .sidebar-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            min-height: 80px;
+            padding: 10px 6px;
+            border-radius: 18px;
+            color: rgba(226, 232, 240, 0.78);
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .nav-item:hover,
+        .nav-item:focus-visible {
+            transform: translateY(-2px);
+            color: #ffffff;
+            background: rgba(148, 163, 184, 0.12);
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.10));
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18), 0 12px 24px rgba(15, 23, 42, 0.18);
+        }
+
+        .nav-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 76%;
+            background-color: rgba(148, 163, 184, 0.12);
+        }
+
+        .sidebar-logo {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .nav-icon-menu {
+            display: grid;
+            place-items: center;
+            color: #e2e8f0;
+        }
+
+        .nav-icon-menu svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        .nav-icon-facebook { background-color: rgba(24, 119, 242, 0.16); }
+        .nav-icon-tokopedia { background-image: url('/static/dashboard/images/Logo_Tokopedia.png'); background-size: 86%; }
+        .nav-icon-shopee { background-image: url('/static/dashboard/images/Logo_Shopee.png'); }
+        .nav-icon-lazada { background-image: url('/static/dashboard/images/Logo_Lazada.png'); }
+        .nav-icon-blibli { background-image: url('/static/dashboard/images/blibli-logo.png'); background-size: 86%; }
+        .nav-icon-grabfood { background: rgba(0, 177, 79, 0.16); }
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .main-stage {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            display: grid;
+            place-items: center;
+            padding: 32px;
+        }
+
+        .privacy-card {
+            width: min(100%, 760px);
+            padding: clamp(28px, 5vw, 46px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+        }
+
+        .privacy-kicker {
+            display: inline-flex;
+            margin: 0 0 16px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(24, 119, 242, 0.10);
+            color: #1d4ed8;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .privacy-card h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 2.7rem);
+            line-height: 1.08;
+        }
+
+        .privacy-card p {
+            margin: 16px 0 0;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .privacy-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 18px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            background: var(--facebook);
+            color: #ffffff;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .action-link.secondary {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        @media (max-width: 760px) {
+            :root {
+                --sidebar-width: 76px;
+            }
+
+            .sidebar {
+                padding: 12px 8px;
+            }
+
+            .nav-item {
+                min-height: 70px;
+                border-radius: 16px;
+            }
+
+            .nav-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .nav-label {
+                font-size: 0.62rem;
+            }
+
+            .main-stage {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<aside class="sidebar" aria-label="Navigasi dashboard">
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-item" aria-label="Ringkasan">
+            <span class="nav-icon nav-icon-menu" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" stroke="currentColor"/>
+                    <path d="M14 15H20M14 19H20" stroke="currentColor" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span class="nav-label">Ringkasan</span>
+        </a>
+        <a href="/restricted/?section=Facebook%20Marketplace" class="nav-item{% if section_name == 'Facebook Marketplace' %} active{% endif %}" aria-label="Facebook">
+            <span class="nav-icon nav-icon-facebook" aria-hidden="true"><img src="/static/dashboard/images/facebook.png" alt="Facebook" class="sidebar-logo"></span>
+            <span class="nav-label">Facebook</span>
+        </a>
+        <a href="/restricted/?section=Tokopedia" class="nav-item{% if section_name == 'Tokopedia' %} active{% endif %}" aria-label="Tokopedia">
+            <span class="nav-icon nav-icon-tokopedia" aria-hidden="true"></span>
+            <span class="nav-label">Tokopedia</span>
+        </a>
+        <a href="/restricted/?section=Shopee" class="nav-item{% if section_name == 'Shopee' %} active{% endif %}" aria-label="Shopee">
+            <span class="nav-icon nav-icon-shopee" aria-hidden="true"></span>
+            <span class="nav-label">Shopee</span>
+        </a>
+        <a href="/restricted/?section=Lazada" class="nav-item{% if section_name == 'Lazada' %} active{% endif %}" aria-label="Lazada">
+            <span class="nav-icon nav-icon-lazada" aria-hidden="true"></span>
+            <span class="nav-label">Lazada</span>
+        </a>
+        <a href="/restricted/?section=Blibli" class="nav-item{% if section_name == 'Blibli' %} active{% endif %}" aria-label="Blibli">
+            <span class="nav-icon nav-icon-blibli" aria-hidden="true"></span>
+            <span class="nav-label">Blibli</span>
+        </a>
+        <a href="/restricted/?section=GrabFood" class="nav-item{% if section_name == 'GrabFood' %} active{% endif %}" aria-label="GrabFood">
+            <span class="nav-icon nav-icon-grabfood" aria-hidden="true"><img src="/static/dashboard/images/grabfood.png" alt="GrabFood" class="sidebar-logo"></span>
+            <span class="nav-label">GrabFood</span>
+        </a>
+    </nav>
+</aside>
+
+<main class="main-stage">
+    <section class="privacy-card" aria-labelledby="privacy-title">
+        <p class="privacy-kicker">Akses Terbatas</p>
+        <h1 id="privacy-title">{{ section_name }} tidak ditampilkan untuk publik.</h1>
+        <p>{{ restricted_message }}</p>
+        <p>
+            Informasi yang tersedia untuk pengunjung adalah ringkasan agregat yang
+            tidak membuka identitas, tabel mentah, atau detail operasional platform.
+        </p>
+        <div class="privacy-actions">
+            <a class="action-link" href="/">Kembali ke Ringkasan</a>
+            <a class="action-link secondary" href="mailto:korisonmangais04@gmail.com">Minta Akses Resmi</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

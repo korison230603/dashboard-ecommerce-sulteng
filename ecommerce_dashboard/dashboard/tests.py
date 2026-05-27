@@ -13,12 +13,12 @@ class DashboardPageTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
 
-        self.assertIn('Dashboard Semua Ecommerce', content)
+        self.assertIn('Ringkasan Aktivitas Pelaku Usaha Digital Sulawesi Tengah', content)
         self.assertIn('Facebook Marketplace', content)
-        self.assertIn('marketplaceShareChart', content)
-        self.assertIn('storeShareChart', content)
+        self.assertIn('productPlatformChart', content)
+        self.assertIn('accountPlatformChart', content)
         self.assertIn('Produk per Toko', content)
-        self.assertIn('facebookPaluComparisonChart', content)
+        self.assertIn('paluComparisonChart', content)
         self.assertIn('/api/ecommerce/summary/', content)
 
     def test_tokopedia_page_renders_non_empty_dashboard(self):
@@ -27,23 +27,35 @@ class DashboardPageTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
 
-        self.assertIn('Dashboard Tokopedia', content)
-        self.assertIn('tokopediaTableBody', content)
+        self.assertIn('Akses Terbatas', content)
+        self.assertIn('Tokopedia tidak ditampilkan untuk publik', content)
+        self.assertNotIn('tokopediaTableBody', content)
 
-    def test_shopee_page_renders_non_empty_dashboard(self):
+    def test_shopee_page_renders_privacy_notice(self):
         response = views.shopee_page(self.factory.get('/shopee/'))
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
 
-        self.assertIn('Dashboard Shopee', content)
-        self.assertIn('shopeeTableBody', content)
+        self.assertIn('Akses Terbatas', content)
+        self.assertIn('Shopee tidak ditampilkan untuk publik', content)
+        self.assertNotIn('shopeeTableBody', content)
 
-    def test_lazada_page_renders_non_empty_dashboard(self):
+    def test_lazada_page_renders_privacy_notice(self):
         response = views.lazada_page(self.factory.get('/lazada/'))
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
 
-        self.assertIn('Dashboard Lazada', content)
-        self.assertIn('lazadaTableBody', content)
+        self.assertIn('Akses Terbatas', content)
+        self.assertIn('Lazada tidak ditampilkan untuk publik', content)
+        self.assertNotIn('lazadaTableBody', content)
+
+    def test_detail_api_is_restricted(self):
+        response = views.tokopedia_tabel(self.factory.get('/api/tokopedia/tabel/'))
+
+        self.assertEqual(response.status_code, 403)
+        content = response.content.decode()
+
+        self.assertIn('restricted', content)
+        self.assertIn('privasi data pelaku usaha', content)

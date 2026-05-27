@@ -25,6 +25,47 @@ DEFAULT_FILTER_OPTIONS = {
     "kategori": [],
 }
 
+RESTRICTED_SECTIONS = {
+    "facebook": "Facebook Marketplace",
+    "ecommerce": "Facebook Marketplace",
+    "tokopedia": "Tokopedia",
+    "shopee": "Shopee",
+    "lazada": "Lazada",
+    "blibli": "Blibli",
+    "grabfood": "GrabFood",
+    "komunitas": "Komunitas Digital",
+}
+
+
+def restricted_context(section=None):
+    section_name = section or "Platform detail"
+    return {
+        "section_name": section_name,
+        "restricted_message": (
+            "Akses detail dibatasi untuk menjaga privasi data pelaku usaha. "
+            "Publik hanya dapat melihat ringkasan agregat pada halaman utama."
+        ),
+    }
+
+
+def privacy_notice_page(request, section=None):
+    selected_section = section or request.GET.get("section") or "Platform detail"
+    return render(request, "restricted.html", restricted_context(selected_section))
+
+
+def restricted_api_response(section):
+    return JsonResponse(
+        {
+            "status": "restricted",
+            "section": section,
+            "message": (
+                "Akses data detail dibatasi untuk menjaga privasi data pelaku usaha. "
+                "Silakan gunakan ringkasan agregat pada halaman utama."
+            ),
+        },
+        status=403,
+    )
+
 
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
@@ -1066,27 +1107,27 @@ def dashboard_page(request):
 
 
 def facebook_page(request):
-    return render(request, "facebook.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["facebook"])
 
 
 def ecommerce_page(request):
-    return render(request, "marketplace.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["ecommerce"])
 
 
 def tokopedia_page(request):
-    return render(request, "tokopedia.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["tokopedia"])
 
 
 def shopee_page(request):
-    return render(request, "shopee.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["shopee"])
 
 
 def lazada_page(request):
-    return render(request, "lazada.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["lazada"])
 
 
 def blibli_page(request):
-    return render(request, "blibli.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["blibli"])
 
 
 def get_grabfood_table_name():
@@ -1317,11 +1358,11 @@ def build_grabfood_summary():
 
 
 def grabfood_page(request):
-    return render(request, "grabfood.html", build_grabfood_context(request))
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["grabfood"])
 
 
 def komunitas_page(request):
-    return render(request, "komunitas.html")
+    return privacy_notice_page(request, RESTRICTED_SECTIONS["komunitas"])
 
 
 # ===============================
@@ -1364,38 +1405,27 @@ def dashboard_overview(request):
 # ECOMMERCE API
 # ===============================
 def ecommerce_dashboard(request):
-    data = {
-        "overview": query_view("SELECT * FROM overview_ecommerce"),
-        "pedagang": query_view("SELECT * FROM pedagang_vs_non"),
-        "kategori": query_view("SELECT * FROM chart_kategori"),
-        "lokasi": query_view("SELECT * FROM v_lokasi_pedagang"),
-    }
-    return JsonResponse(data)
+    return restricted_api_response("Ecommerce detail")
 
 
 def ecommerce_overview(request):
-    data = query_view("SELECT * FROM overview_ecommerce")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Ecommerce overview detail")
 
 
 def ecommerce_pedagang(request):
-    data = query_view("SELECT * FROM pedagang_vs_non")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Ecommerce pedagang detail")
 
 
 def ecommerce_kategori(request):
-    data = query_view("SELECT * FROM chart_kategori")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Ecommerce kategori detail")
 
 
 def ecommerce_lokasi(request):
-    data = query_view("SELECT * FROM v_lokasi_pedagang")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Ecommerce lokasi detail")
 
 
 def ecommerce_tabel(request):
-    data = query_view("SELECT * FROM ecommerce_valid")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Ecommerce tabel detail")
 
 
 def ecommerce_summary_dashboard(request):
@@ -1407,65 +1437,49 @@ def ecommerce_summary_quick(request):
 
 
 def tokopedia_dashboard(request):
-    data = {
-        "overview": query_view(TOKOPEDIA_OVERVIEW_QUERY),
-        "kategori": query_view(TOKOPEDIA_KATEGORI_QUERY),
-        "harga": query_view(TOKOPEDIA_HARGA_QUERY),
-        "produk_lokasi": query_view(TOKOPEDIA_PRODUK_LOKASI_QUERY),
-        "toko_lokasi": query_view(TOKOPEDIA_TOKO_LOKASI_QUERY),
-    }
-    return JsonResponse(data)
+    return restricted_api_response("Tokopedia detail")
 
 
 def tokopedia_tabel(request):
-    data = query_view(TOKOPEDIA_TABLE_QUERY)
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Tokopedia tabel detail")
 
 
 def shopee_tabel(request):
-    data = query_view(SHOPEE_TABLE_QUERY)
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Shopee tabel detail")
 
 
 def lazada_tabel(request):
-    data = query_view(LAZADA_TABLE_QUERY)
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Lazada tabel detail")
 
 
 def blibli_tabel(request):
-    data = query_view(BLIBLI_TABLE_QUERY)
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Blibli tabel detail")
 
 
 # ===============================
 # KOMUNITAS API
 # ===============================
 def komunitas_master(request):
-    data = build_community_dataset()["master_rows"]
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Komunitas master detail")
 
 
 def komunitas_overview(request):
-    data = build_community_dataset()["overview_rows"]
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Komunitas overview detail")
 
 
 def komunitas_grup(request):
-    data = build_community_dataset()["group_rows"]
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Komunitas grup detail")
 
 
 def komunitas_intensitas(request):
-    data = build_community_dataset()["intensity_rows"]
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Komunitas intensitas detail")
 
 
 # ===============================
 # DEBUG (OPTIONAL)
 # ===============================
 def debug_ecommerce(request):
-    data = query_view("SELECT * FROM ecommerce_valid LIMIT 100")
-    return JsonResponse(data, safe=False)
+    return restricted_api_response("Debug ecommerce")
 
 
 def debug_database(request):

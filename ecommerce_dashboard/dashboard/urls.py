@@ -7,6 +7,7 @@ urlpatterns = [
     # HALAMAN
     # =====================
     path('', views.dashboard_page, name='dashboard'),
+    path('restricted/', views.privacy_notice_page, name='restricted'),
     path('facebook/', views.facebook_page, name='facebook'),
     path('ecommerce/', views.ecommerce_page, name='ecommerce'),
     path('tokopedia/', views.tokopedia_page, name='tokopedia'),
