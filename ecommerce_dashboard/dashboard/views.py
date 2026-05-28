@@ -1,9 +1,10 @@
 import json
 from time import monotonic
 
+from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 
 # ===============================
@@ -36,11 +37,23 @@ RESTRICTED_SECTIONS = {
     "komunitas": "Komunitas Digital",
 }
 
+DETAIL_ACCESS_SESSION_KEY = "dashboard_detail_access"
+DETAIL_SECTION_PATHS = {
+    "Facebook Marketplace": "/facebook/",
+    "Tokopedia": "/tokopedia/",
+    "Shopee": "/shopee/",
+    "Lazada": "/lazada/",
+    "Blibli": "/blibli/",
+    "GrabFood": "/grabfood/",
+    "Komunitas Digital": "/komunitas/",
+}
+
 
 def restricted_context(section=None):
     section_name = section or "Platform detail"
     return {
         "section_name": section_name,
+        "target_path": DETAIL_SECTION_PATHS.get(section_name, "/"),
         "restricted_message": (
             "Akses detail dibatasi untuk menjaga privasi data pelaku usaha. "
             "Publik hanya dapat melihat ringkasan agregat pada halaman utama."
@@ -50,7 +63,39 @@ def restricted_context(section=None):
 
 def privacy_notice_page(request, section=None):
     selected_section = section or request.GET.get("section") or "Platform detail"
-    return render(request, "restricted.html", restricted_context(selected_section))
+    context = restricted_context(selected_section)
+
+    if request.method == "POST":
+        access_code = request.POST.get("access_code", "").strip()
+        if access_code == settings.DASHBOARD_ACCESS_CODE:
+            if hasattr(request, "session"):
+                request.session[DETAIL_ACCESS_SESSION_KEY] = True
+            return redirect(context["target_path"])
+
+        context["access_error"] = (
+            "Kode akses tidak sesuai. Periksa kembali kode dari pemilik dashboard "
+            "atau ajukan akses resmi melalui email."
+        )
+
+    return render(request, "restricted.html", context)
+
+
+def has_detail_access(request):
+    return bool(getattr(request, "session", {}).get(DETAIL_ACCESS_SESSION_KEY))
+
+
+def render_protected_page(request, section_key, template_name, context=None):
+    if not has_detail_access(request):
+        return privacy_notice_page(request, RESTRICTED_SECTIONS[section_key])
+
+    return render(request, template_name, context or {})
+
+
+def require_detail_access(request, section):
+    if has_detail_access(request):
+        return None
+
+    return restricted_api_response(section)
 
 
 def restricted_api_response(section):
@@ -1107,27 +1152,27 @@ def dashboard_page(request):
 
 
 def facebook_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["facebook"])
+    return render_protected_page(request, "facebook", "facebook.html")
 
 
 def ecommerce_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["ecommerce"])
+    return render_protected_page(request, "ecommerce", "marketplace.html")
 
 
 def tokopedia_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["tokopedia"])
+    return render_protected_page(request, "tokopedia", "tokopedia.html")
 
 
 def shopee_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["shopee"])
+    return render_protected_page(request, "shopee", "shopee.html")
 
 
 def lazada_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["lazada"])
+    return render_protected_page(request, "lazada", "lazada.html")
 
 
 def blibli_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["blibli"])
+    return render_protected_page(request, "blibli", "blibli.html")
 
 
 def get_grabfood_table_name():
@@ -1358,11 +1403,14 @@ def build_grabfood_summary():
 
 
 def grabfood_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["grabfood"])
+    if not has_detail_access(request):
+        return privacy_notice_page(request, RESTRICTED_SECTIONS["grabfood"])
+
+    return render(request, "grabfood.html", build_grabfood_context(request))
 
 
 def komunitas_page(request):
-    return privacy_notice_page(request, RESTRICTED_SECTIONS["komunitas"])
+    return render_protected_page(request, "komunitas", "komunitas.html")
 
 
 # ===============================
@@ -1405,27 +1453,51 @@ def dashboard_overview(request):
 # ECOMMERCE API
 # ===============================
 def ecommerce_dashboard(request):
-    return restricted_api_response("Ecommerce detail")
+    restricted_response = require_detail_access(request, "Ecommerce detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_ecommerce_summary_response(request, include_full=True))
 
 
 def ecommerce_overview(request):
-    return restricted_api_response("Ecommerce overview detail")
+    restricted_response = require_detail_access(request, "Ecommerce overview detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_ecommerce_summary_response(request, include_full=False))
 
 
 def ecommerce_pedagang(request):
-    return restricted_api_response("Ecommerce pedagang detail")
+    restricted_response = require_detail_access(request, "Ecommerce pedagang detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_ecommerce_summary_response(request, include_full=True))
 
 
 def ecommerce_kategori(request):
-    return restricted_api_response("Ecommerce kategori detail")
+    restricted_response = require_detail_access(request, "Ecommerce kategori detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_ecommerce_summary_response(request, include_full=True))
 
 
 def ecommerce_lokasi(request):
-    return restricted_api_response("Ecommerce lokasi detail")
+    restricted_response = require_detail_access(request, "Ecommerce lokasi detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_ecommerce_summary_response(request, include_full=True))
 
 
 def ecommerce_tabel(request):
-    return restricted_api_response("Ecommerce tabel detail")
+    restricted_response = require_detail_access(request, "Ecommerce tabel detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(query_view(f"{ALL_ECOMMERCE_UNION_QUERY} LIMIT 1000"), safe=False)
 
 
 def ecommerce_summary_dashboard(request):
@@ -1437,42 +1509,86 @@ def ecommerce_summary_quick(request):
 
 
 def tokopedia_dashboard(request):
-    return restricted_api_response("Tokopedia detail")
+    restricted_response = require_detail_access(request, "Tokopedia detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(
+        {
+            "overview": query_view(TOKOPEDIA_OVERVIEW_QUERY),
+            "kategori": query_view(TOKOPEDIA_KATEGORI_QUERY),
+            "harga": query_view(TOKOPEDIA_HARGA_QUERY),
+            "produk_lokasi": query_view(TOKOPEDIA_PRODUK_LOKASI_QUERY),
+            "toko_lokasi": query_view(TOKOPEDIA_TOKO_LOKASI_QUERY),
+        }
+    )
 
 
 def tokopedia_tabel(request):
-    return restricted_api_response("Tokopedia tabel detail")
+    restricted_response = require_detail_access(request, "Tokopedia tabel detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(query_view(TOKOPEDIA_TABLE_QUERY), safe=False)
 
 
 def shopee_tabel(request):
-    return restricted_api_response("Shopee tabel detail")
+    restricted_response = require_detail_access(request, "Shopee tabel detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(query_view(SHOPEE_TABLE_QUERY), safe=False)
 
 
 def lazada_tabel(request):
-    return restricted_api_response("Lazada tabel detail")
+    restricted_response = require_detail_access(request, "Lazada tabel detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(query_view(LAZADA_TABLE_QUERY), safe=False)
 
 
 def blibli_tabel(request):
-    return restricted_api_response("Blibli tabel detail")
+    restricted_response = require_detail_access(request, "Blibli tabel detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(query_view(BLIBLI_TABLE_QUERY), safe=False)
 
 
 # ===============================
 # KOMUNITAS API
 # ===============================
 def komunitas_master(request):
-    return restricted_api_response("Komunitas master detail")
+    restricted_response = require_detail_access(request, "Komunitas master detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_community_dataset()["master_rows"], safe=False)
 
 
 def komunitas_overview(request):
-    return restricted_api_response("Komunitas overview detail")
+    restricted_response = require_detail_access(request, "Komunitas overview detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_community_dataset()["overview_rows"], safe=False)
 
 
 def komunitas_grup(request):
-    return restricted_api_response("Komunitas grup detail")
+    restricted_response = require_detail_access(request, "Komunitas grup detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_community_dataset()["group_rows"], safe=False)
 
 
 def komunitas_intensitas(request):
-    return restricted_api_response("Komunitas intensitas detail")
+    restricted_response = require_detail_access(request, "Komunitas intensitas detail")
+    if restricted_response:
+        return restricted_response
+
+    return JsonResponse(build_community_dataset()["intensity_rows"], safe=False)
 
 
 # ===============================
