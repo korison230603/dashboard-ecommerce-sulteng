@@ -68,7 +68,7 @@ RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-dev-secret-key-change-me")
-DASHBOARD_ACCESS_CODE = os.environ.get("DASHBOARD_ACCESS_CODE", "KORISON2026")
+DASHBOARD_ACCESS_CODE = os.environ.get("DASHBOARD_ACCESS_CODE", "SESULTENG2026")
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 # SECURITY WARNING: don't run with debug turned on in production!
