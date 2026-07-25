@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -136,15 +137,31 @@ WSGI_APPLICATION = 'ecommerce_dashboard.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME') or os.environ.get('MYSQLDATABASE') or 'ecommerce_project',
-        'USER': os.environ.get('DB_USER') or os.environ.get('MYSQLUSER') or 'newuser',
-        'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('MYSQLPASSWORD') or '',
-        'HOST': os.environ.get('DB_HOST') or os.environ.get('MYSQLHOST') or 'localhost',
-        'PORT': os.environ.get('DB_PORT') or os.environ.get('MYSQLPORT') or '3306',
+def mysql_database_config():
+    database_url = os.environ.get("DATABASE_URL") or os.environ.get("MYSQL_URL")
+    if database_url:
+        parsed = urlparse(database_url)
+        return {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": parsed.path.lstrip("/") or "railway",
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "localhost",
+            "PORT": str(parsed.port or 3306),
+        }
+
+    return {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ.get("DB_NAME") or os.environ.get("MYSQLDATABASE") or "ecommerce_project",
+        "USER": os.environ.get("DB_USER") or os.environ.get("MYSQLUSER") or "newuser",
+        "PASSWORD": os.environ.get("DB_PASSWORD") or os.environ.get("MYSQLPASSWORD") or "",
+        "HOST": os.environ.get("DB_HOST") or os.environ.get("MYSQLHOST") or "localhost",
+        "PORT": os.environ.get("DB_PORT") or os.environ.get("MYSQLPORT") or "3306",
     }
+
+
+DATABASES = {
+    "default": mysql_database_config()
 }
 
 # Password validation

@@ -2,7 +2,7 @@ import json
 from time import monotonic
 
 from django.conf import settings
-from django.db import connection
+from django.db import DatabaseError, connection
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
@@ -1177,23 +1177,26 @@ def blibli_page(request):
 
 def get_grabfood_table_name():
     candidates = ("grabfood", "dashboard_grabfoodmerchant")
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = DATABASE()
-              AND table_name IN (%s, %s)
-            """,
-            candidates,
-        )
-        existing = {row[0] for row in cursor.fetchall()}
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND table_name IN (%s, %s)
+                """,
+                candidates,
+            )
+            existing = {row[0] for row in cursor.fetchall()}
+    except DatabaseError:
+        return None
 
     for table_name in candidates:
         if table_name in existing:
             return table_name
 
-    return candidates[0]
+    return None
 
 
 def normalize_grabfood_kab_kota(value):
@@ -1217,6 +1220,9 @@ def is_grabfood_coordinate_valid(value):
 
 def build_grabfood_context(request):
     table_name = get_grabfood_table_name()
+    if not table_name:
+        return empty_grabfood_context()
+
     selected_kab_kota = request.GET.get("kab_kota", "").strip()
     selected_status = request.GET.get("status", "").strip()
 
@@ -1330,6 +1336,9 @@ def build_grabfood_context(request):
 
 def build_grabfood_summary():
     table_name = get_grabfood_table_name()
+    if not table_name:
+        return empty_grabfood_summary()
+
     rows = query_view(
         f"""
         SELECT
@@ -1399,6 +1408,46 @@ def build_grabfood_summary():
         "map_data": map_rows,
         "per_kab_kota": per_kab_kota,
         "status_summary": status_summary,
+    }
+
+
+def empty_grabfood_context():
+    return {
+        "grabfood_rows": "[]",
+        "grabfood_map_rows": "[]",
+        "kab_kota_options": [],
+        "status_options": [],
+        "selected_kab_kota": "",
+        "selected_status": "",
+        "kpi": {
+            "total_merchant": 0,
+            "total_valid": 0,
+            "merchant_buka": 0,
+            "merchant_tutup_sementara": 0,
+            "kab_kota_terdata": 0,
+            "lokasi_dominan": "Data belum tersedia",
+        },
+        "insights": {
+            "wilayah_dominan": "Data belum tersedia",
+            "status_dominan": "Data belum tersedia",
+            "cakupan_titik": 0,
+            "cakupan_wilayah": 0,
+        },
+        "has_data": False,
+    }
+
+
+def empty_grabfood_summary():
+    return {
+        "summary": {
+            "total_grabfood_merchant": 0,
+            "grabfood_merchant_buka": 0,
+            "grabfood_kab_kota_terdata": 0,
+            "grabfood_lokasi_dominan": "Data belum tersedia",
+        },
+        "map_data": [],
+        "per_kab_kota": [],
+        "status_summary": [],
     }
 
 
