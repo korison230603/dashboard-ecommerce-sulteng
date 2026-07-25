@@ -81,6 +81,9 @@ def privacy_notice_page(request, section=None):
 
 
 def has_detail_access(request):
+    if not settings.DASHBOARD_ACCESS_CODE:
+        return True
+
     return bool(getattr(request, "session", {}).get(DETAIL_ACCESS_SESSION_KEY))
 
 
